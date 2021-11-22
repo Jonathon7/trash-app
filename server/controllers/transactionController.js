@@ -6,7 +6,7 @@ const getFees = (req, res) => {
   openDbConnection().then((connection) => {
     let result;
     const request = new Request(
-      `SELECT * FROM ${process.env.feesTable}`,
+      `SELECT * FROM ${process.env.testFeesTable}`,
       (err) => {
         if (err) {
           throw err;
@@ -65,8 +65,8 @@ const createTransaction = (req, res) => {
         return;
       }
 
-      const sql1 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment, ServicedDate) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}', '${servicedDate}')`;
-      const sql2 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}')`;
+      const sql1 = `INSERT INTO ${process.env.testTransactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment, ServicedDate) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}', '${servicedDate}')`;
+      const sql2 = `INSERT INTO ${process.env.testTransactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}')`;
 
       const sql = servicedDate ? sql1 : sql2;
 
@@ -81,6 +81,7 @@ const createTransaction = (req, res) => {
 
       connection.execSql(request);
 
+      req.session.transaction = {};
       res.status(200).json({ message: "Rows Inserted." });
     });
   });
@@ -93,7 +94,7 @@ const addFee = (req, res) => {
     } else {
       openDbConnection().then((connection) => {
         const request = new Request(
-          `INSERT INTO ${process.env.feesTable}(Name, Amount) values('${req.body.name}', ${req.body.amount});`,
+          `INSERT INTO ${process.env.testFeesTable}(Name, Amount) values('${req.body.name}', ${req.body.amount});`,
           (err) => {
             if (err) {
               throw err;
@@ -115,7 +116,7 @@ const addFee = (req, res) => {
 const updateFee = (req, res) => {
   openDbConnection().then((connection) => {
     const request = new Request(
-      `UPDATE ${process.env.feesTable} SET Amount = ${req.body.feeAmount} WHERE FeeId = ${req.body.id}`,
+      `UPDATE ${process.env.testFeesTable} SET Amount = ${req.body.feeAmount} WHERE FeeId = ${req.body.id}`,
       (err) => {
         if (err) {
           throw err;
@@ -141,7 +142,7 @@ const checkForExistingFee = (name) =>
     openDbConnection().then((connection) => {
       let feeExists = false;
       const request = new Request(
-        `SELECT * FROM ${process.env.feesTable} WHERE Name = '${name}'`,
+        `SELECT * FROM ${process.env.testFeesTable} WHERE Name = '${name}'`,
         (err) => {
           if (err) {
             throw err;
@@ -173,7 +174,7 @@ const getDates = (id) =>
     openDbConnection().then((connection) => {
       let results;
       const request = new Request(
-        `SELECT SetDate FROM ${process.env.containerTable} WHERE ContainerId = '${id}'`,
+        `SELECT SetDate FROM ${process.env.testContainerTable} WHERE ContainerId = '${id}'`,
         (err) => {
           if (err) {
             throw err;
@@ -202,7 +203,7 @@ const getTransactions = (req, res) => {
 
     let results;
     const request = new Request(
-      `SELECT * FROM ${process.env.transactionsTable} WHERE CustomerId = ${ID}`,
+      `SELECT * FROM ${process.env.testTransactionsTable} WHERE CustomerId = ${ID}`,
       (err) => {
         if (err) {
           throw err;
@@ -225,10 +226,32 @@ const getTransactions = (req, res) => {
   });
 };
 
+const getFormData = (req, res) => {
+  res.status(200).json(req.session.transaction);
+};
+
+const saveFormData = (req, res) => {
+  if (typeof req.session.transaction !== "undefined") {
+    req.session.transaction = {};
+  }
+
+  req.session.transaction = req.body;
+
+  res.status(200).json(req.session.transaction);
+};
+
+const clearForm = (req, res) => {
+  req.session.transaction = {};
+  res.status(200).json("form data cleared");
+};
+
 module.exports = {
   getFees,
   createTransaction,
   addFee,
   updateFee,
   getTransactions,
+  getFormData,
+  saveFormData,
+  clearForm,
 };

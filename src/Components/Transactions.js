@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -42,6 +42,7 @@ function createFeesArray(arr) {
 
 let tonTimeout = null;
 let containerIDTimeout = null;
+let intervalID = null;
 
 export default function Transactions() {
   const [customerID, setCustomerID] = useState("");
@@ -69,6 +70,7 @@ export default function Transactions() {
   const [infoMessage, setInfoMessage] = useState(false);
   const [feesModalOpen, setFeesModalOpen] = useState(false);
   const [transactionsModalOpen, setTransactionsModalOpen] = useState(false);
+  const [checkedForSessionData, setCheckedForSessionData] = useState(false);
   const [requiredFees] = useState([
     "PULL FEE",
     "LANDFILL TONNAGE",
@@ -77,11 +79,63 @@ export default function Transactions() {
 
   const toggleFeesModal = () => setFeesModalOpen(!feesModalOpen);
 
+  const saveTransactionFormData = useCallback(
+    function saveTransactionFormData() {
+      if (!checkedForSessionData) return;
+
+      const formData = {
+        customerID,
+        customerName,
+        locationID,
+        containerID,
+        ton,
+        servicedDate,
+        comments,
+        landfillTonnageFeeAmount,
+        TNRCCFeeAmount,
+        landfillTonnage,
+        TNRCC,
+        fee,
+        addedFees,
+        total,
+      };
+
+      axios
+        .post("/api/transaction-form-data", formData)
+        .then((res) => {
+          // console.log(res.data);
+        })
+        .catch((err) => console.log(err));
+    },
+    [
+      customerID,
+      customerName,
+      locationID,
+      containerID,
+      ton,
+      servicedDate,
+      comments,
+      landfillTonnageFeeAmount,
+      TNRCCFeeAmount,
+      landfillTonnage,
+      TNRCC,
+      fee,
+      addedFees,
+      total,
+      checkedForSessionData,
+    ]
+  );
+
   useEffect(() => {
     let isSubscribed = true;
     getFees().then((fees) => isSubscribed && setFees(fees));
-    return () => (isSubscribed = false);
-  }, []);
+    saveTransactionFormData();
+    !checkedForSessionData && checkForSessionData();
+    return () => {
+      isSubscribed = false;
+      clearInterval(intervalID);
+    };
+  }, [saveTransactionFormData, checkedForSessionData]);
 
   async function getFees() {
     return axios
@@ -115,7 +169,6 @@ export default function Transactions() {
   function handleTonChange(e) {
     // limits the amount of digits the tonnage number can have to 10
     if (e.target.value.toString().length > 10) return;
-
     // the ton value is not money but it does need to be converted into a '0.00' string to perform safe calculations
     let tonValue = money.floatToAmount(e.target.value);
 
@@ -135,13 +188,12 @@ export default function Transactions() {
    * updateTotal is only called once with the correct value
    */
   function setCalculatedFees(tonnage) {
-    // if the input is valid - if it is a numeric value and the last character is not a decimal
     if (landfillTonnageFeeAmount && TNRCCFeeAmount) {
       // code in if block executes only if landfill and tnrcc previously contained non-zero numeric values
       if (
         landfillTonnage &&
-        landfillTonnage !== "0.00" &&
         TNRCC &&
+        landfillTonnage !== "0.00" &&
         TNRCC !== "0.00"
       ) {
         let newLandfillTonnage = money.mul(tonnage, landfillTonnageFeeAmount);
@@ -449,6 +501,50 @@ export default function Transactions() {
     setTransactionsModalOpen(!transactionsModalOpen);
   }
 
+  function checkForSessionData() {
+    axios
+      .get("/api/transaction-form-data")
+      .then((res) => {
+        res.data.customerID && setCustomerID(res.data.customerID);
+        res.data.customerName && setCustomerName(res.data.customerName);
+        res.data.locationID && setLocationID(res.data.locationID);
+        res.data.containerID && setContainerID(res.data.containerID);
+        res.data.ton && setTon(res.data.ton);
+        res.data.servicedDate && setServicedDate(res.data.servicedDate);
+        res.data.comments && setComments(res.data.comments);
+        res.data.landfillTonnageFeeAmount &&
+          setLandfillTonnageFeeAmount(res.data.landfillTonnageFeeAmount);
+        res.data.TNRCCFeeAmount && setTNRCCFeeAmount(res.data.TNRCCFeeAmount);
+        res.data.landfillTonnage &&
+          setLandfillTonnage(res.data.landfillTonnage);
+        res.data.TNRCC && setTNRCC(res.data.TNRCC);
+        res.data.fee && setFee(res.data.fee);
+        res.data.addedFees && setAddedFees(res.data.addedFees);
+        res.data.total && setTotal(res.data.total);
+        setCheckedForSessionData(true);
+      })
+      .catch((err) => console.log(err));
+  }
+
+  function clearForm() {
+    axios.delete("/api/clear-form");
+
+    setCustomerID("");
+    setCustomerName("");
+    setLocationID("");
+    setContainerID("");
+    setTon("");
+    setServicedDate(null);
+    setComments("");
+    setLandfillTonnageFeeAmount("");
+    setTNRCCFeeAmount("");
+    setLandfillTonnage("");
+    setTNRCC("");
+    setFee("");
+    setAddedFees([]);
+    setTotal("");
+  }
+
   return (
     <React.Fragment>
       <Notification
@@ -481,6 +577,9 @@ export default function Transactions() {
             </Button>
             <Button variant="text" sx={{ mr: 2 }} onClick={toggleFeesModal}>
               SHOW FEES
+            </Button>
+            <Button variant="text" sx={{ mr: 2 }} onClick={clearForm}>
+              CLEAR FORM
             </Button>
             <Typography variant="h6" component="div">
               {addedFees.length ? `$${total}` : ""}
@@ -635,6 +734,9 @@ export default function Transactions() {
                     {option.label}
                   </li>
                 );
+              }}
+              isOptionEqualToValue={(option, value) => {
+                return option.id === value.id;
               }}
               renderInput={(params) => {
                 return (

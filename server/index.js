@@ -45,6 +45,9 @@ app.get("/api/transactions/:ID?", Transaction.getTransactions);
 app.post("/api/transaction", Transaction.createTransaction);
 app.post("/api/fees", Transaction.addFee);
 app.put("/api/fees", Transaction.updateFee);
+app.post("/api/transaction-form-data", Transaction.saveFormData);
+app.get("/api/transaction-form-data", Transaction.getFormData);
+app.delete("/api/clear-form", Transaction.clearForm);
 
 const PORT = process.env.NODE_PORT;
 

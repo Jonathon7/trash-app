@@ -34,7 +34,10 @@ export default function FeesTable(props) {
                 {row.label !== "PULL FEE" &&
                   row.label !== "TNRCC FEE CHARGE" &&
                   row.label !== "LANDFILL TONNAGE" && (
-                    <IconButton onClick={() => props.removeFee(row.label)}>
+                    <IconButton
+                      onClick={() => props.removeFee(row.label)}
+                      sx={{ p: 0 }}
+                    >
                       <CloseIcon />
                     </IconButton>
                   )}

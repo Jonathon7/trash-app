@@ -220,7 +220,7 @@ export default function Container() {
       <Grid container direction="row" justifyContent="space-evenly">
         <Grid container direction="column" style={{ width: "40%" }}>
           <Typography variant="h5" component="h1">
-            Search For a Container
+            Find a Container
           </Typography>
           <FormControl margin="normal">
             <Autocomplete
@@ -290,7 +290,7 @@ export default function Container() {
         </Grid>
         <Grid container direction="column" style={{ width: "40%" }}>
           <Typography variant="h5" component="h1">
-            Add Container
+            Add a Container
           </Typography>
           <FormControl margin="normal">
             <TextField
