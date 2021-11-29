@@ -23,37 +23,28 @@ export default function AddFeeForm(props) {
       return false;
     }
 
-    if (!isValidAmount()) {
+    return true;
+  }
+
+  function handleFeeOnChange(e, val) {
+    if (val) {
+      setFeeName(val.label);
+      setFeeAmount(val.amount);
+      setFeeID(val.id);
+    } else {
+      setFeeName(val);
+      setFeeAmount("");
+      setFeeID("");
+    }
+  }
+
+  function isValidAmount(amount) {
+    if (isNaN(amount)) {
       setValidNumber(false);
       return false;
     }
 
     return true;
-  }
-
-  function isValidAmount() {
-    if (isNaN(feeAmount) || feeAmount.toString().slice(-1) === ".") {
-      return false;
-    }
-
-    return true;
-  }
-
-  function handleFeeOnChange(e, val) {
-    setFeeName(val ? val.label : val);
-
-    if (!feeAmount) {
-      setFeeAmount(val.amount / 100);
-    }
-
-    if (!feeID) {
-      setFeeID(val.id);
-    }
-
-    if (!val) {
-      setFeeAmount("");
-      setFeeID("");
-    }
   }
 
   return (
@@ -87,8 +78,8 @@ export default function AddFeeForm(props) {
           variant="outlined"
           size="small"
           error={(error && !feeAmount) || (!validNumber && true)}
-          value={feeAmount}
           onFocus={() => !validNumber && setValidNumber(true)}
+          value={feeAmount}
           onChange={(e) => setFeeAmount(e.target.value)}
         ></TextField>
       </FormControl>

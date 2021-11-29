@@ -11,7 +11,7 @@ export default function AddFeeForm(props) {
   const [validNumber, setValidNumber] = useState(true);
 
   function handleClick() {
-    if (!validate() || !isValidAmount) return;
+    if (!validate() || !isValidAmount()) return;
     isValidAmount();
     props.addFeeToDB(addFeeName, addFeeAmount);
   }
@@ -31,7 +31,7 @@ export default function AddFeeForm(props) {
   }
 
   function isValidAmount() {
-    if (isNaN(addFeeAmount) || addFeeAmount.slice(-1) === ".") {
+    if (isNaN(addFeeAmount)) {
       return false;
     }
 

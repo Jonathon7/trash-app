@@ -16,6 +16,7 @@ import Card from "./Card";
 import UpdateContainerForm from "./UpdateContainerForm";
 import Error from "./Error";
 import Notification from "./Notification";
+import { formatDate } from "../utils/formatDate";
 
 // SQL Server formats the return array with nested objects and the MUI Autocomplete component wants a different format
 function createContainerIDsArray(arr) {
@@ -95,12 +96,14 @@ export default function Container() {
           IN_STOCK: res.data[9].value ? "YES" : "NO",
         });
         result.push({
-          SET_DATE: res.data[5].value ? res.data[5].value : "NULL",
+          SET_DATE: formatDate(res.data[5].value),
         });
         result.push({ LOCATION_ID: res.data[6].value });
         result.push({ CUSTOMER_ID: res.data[7].value });
         result.push({ COMMENTS: res.data[8].value });
-        result.push({ RETURNED_TO_STOCK_DATE: res.data[10].value });
+        result.push({
+          RETURNED_TO_STOCK_DATE: formatDate(res.data[10].value),
+        });
         setCubicYard(res.data[2].value);
         setType(res.data[3].value);
         setCityOwned(res.data[4].value ? "YES" : "NO");
@@ -116,11 +119,8 @@ export default function Container() {
   }
 
   function handleAutocompleteChange(e, val) {
+    setID(val);
     setResults([]);
-    if (val) {
-      setID(val);
-      setResults([]);
-    }
   }
 
   function validateGetContainerForm() {

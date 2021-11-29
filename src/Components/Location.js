@@ -45,7 +45,7 @@ export default function Location() {
   useEffect(() => {
     let isSubscribed = true;
     getLocations().then((locations) => {
-      return isSubscribed ? setLocations(locations) : null;
+      return isSubscribed ? setLocations(locations || []) : null;
     });
     return () => (isSubscribed = false);
   }, []);

@@ -6,7 +6,7 @@ const getContainerIDs = (req, res) => {
   openDbConnection().then((connection) => {
     let result;
     const request = new Request(
-      `SELECT ContainerId FROM ${process.env.testContainerTable}`,
+      `SELECT ContainerId FROM ${process.env.containerTable}`,
       (err) => {
         if (err) {
           throw err;
@@ -34,7 +34,7 @@ const getContainer = (req, res) => {
     let result;
 
     const request = new Request(
-      `SELECT * FROM ${process.env.testContainerTable} WHERE ContainerId = ${req.params.ID};`,
+      `SELECT * FROM ${process.env.containerTable} WHERE ContainerId = ${req.params.ID};`,
       (err) => {
         if (err) {
           throw err;
@@ -123,11 +123,11 @@ const updateContainer = async (req, res) => {
     setDate = formatDate(setDate);
     returnedToStockDate = formatDate(returnedToStockDate);
 
-    const sql1 = `UPDATE ${process.env.testContainerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate='${setDate}', Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
+    const sql1 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate='${setDate}', Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
 
-    const sql2 = `UPDATE ${process.env.testContainerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate='${returnedToStockDate}' WHERE containerId=${ID}`;
+    const sql2 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate='${returnedToStockDate}' WHERE containerId=${ID}`;
 
-    const sql3 = `UPDATE ${process.env.testContainerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
+    const sql3 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
 
     let sql;
 
@@ -182,11 +182,11 @@ const addContainer = async (req, res) => {
         cityOwned = cityOwned === "YES" ? 1 : 0;
         inStock = inStock === "YES" ? 1 : 0;
 
-        const sql1 = `INSERT INTO ${process.env.testContainerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, SetDate, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${setDate}', '${customerID}', '${locationID}', '${comments}');`;
+        const sql1 = `INSERT INTO ${process.env.containerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, SetDate, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${setDate}', '${customerID}', '${locationID}', '${comments}');`;
 
-        const sql2 = `INSERT INTO ${process.env.testContainerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, ReturnedToStockDate, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${returnedToStockDate}', '${customerID}', '${locationID}', '${comments}');`;
+        const sql2 = `INSERT INTO ${process.env.containerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, ReturnedToStockDate, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${returnedToStockDate}', '${customerID}', '${locationID}', '${comments}');`;
 
-        const sql3 = `INSERT INTO ${process.env.testContainerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${customerID}', '${locationID}', '${comments}');`;
+        const sql3 = `INSERT INTO ${process.env.containerTable} (ContainerId, CubicYard, Type, CityOwned, InStock, CustomerId, Location, Comment) VALUES ('${ID}', '${cubicYard}', '${type}', ${cityOwned}, ${inStock}, '${customerID}', '${locationID}', '${comments}');`;
 
         const sql =
           !setDate && !returnedToStockDate ? sql3 : setDate ? sql1 : sql2;
@@ -213,7 +213,7 @@ const checkForExistingContainer = (ID) =>
     openDbConnection().then((connection) => {
       let containerExists = false;
       const request = new Request(
-        `SELECT * FROM ${process.env.testContainerTable} WHERE ContainerId = ${ID}`,
+        `SELECT * FROM ${process.env.containerTable} WHERE ContainerId = ${ID}`,
         (err) => {
           if (err) {
             throw err;
@@ -245,7 +245,7 @@ const checkIfLocationExists = (ID) =>
     openDbConnection().then((connection) => {
       let locationExists = false;
       const request = new Request(
-        `SELECT * FROM ${process.env.testLocationTable} WHERE LocationId = ${ID}`,
+        `SELECT * FROM ${process.env.locationTable} WHERE LocationId = ${ID}`,
         (err) => {
           if (err) {
             throw err;
@@ -277,7 +277,7 @@ const checkIfCustomerExists = (ID) =>
     openDbConnection().then((connection) => {
       let customerExists = false;
       const request = new Request(
-        `SELECT * FROM ${process.env.testCustomerTable} WHERE CustomerId = ${ID}`,
+        `SELECT * FROM ${process.env.customerTable} WHERE CustomerId = ${ID}`,
         (err) => {
           if (err) {
             throw err;

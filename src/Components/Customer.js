@@ -39,7 +39,7 @@ export default function Customer() {
   useEffect(() => {
     let isSubscribed = true;
     getCustomers().then((customers) => {
-      return isSubscribed ? setCustomers(customers) : null;
+      return isSubscribed ? setCustomers(customers || []) : null;
     });
     return () => (isSubscribed = false);
   }, []);
@@ -133,10 +133,15 @@ export default function Customer() {
 
   function handleAutocompleteChange(e, val) {
     setResults([]);
+
     if (val) {
-      setCustomerName(val.label);
       setCustomerID(val.id);
+      setCustomerName(val.label);
+      return;
     }
+
+    setCustomerName(null);
+    setCustomerID(null);
   }
 
   function toggleOpen() {

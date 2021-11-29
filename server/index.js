@@ -41,13 +41,18 @@ app.post("/api/container", Container.addContainer);
 
 // Transaction Form
 app.get("/api/fees", Transaction.getFees);
-app.get("/api/transactions/:ID?", Transaction.getTransactions);
+app.get(
+  "/api/transactions/:customerID/:locationID/:containerID",
+  Transaction.getTransactions
+);
 app.post("/api/transaction", Transaction.createTransaction);
 app.post("/api/fees", Transaction.addFee);
 app.put("/api/fees", Transaction.updateFee);
 app.post("/api/transaction-form-data", Transaction.saveFormData);
 app.get("/api/transaction-form-data", Transaction.getFormData);
 app.delete("/api/clear-form", Transaction.clearForm);
+app.put("/api/transactions", Transaction.updateTransaction);
+app.delete("/api/transactions/:ID", Transaction.deleteTransactions);
 
 const PORT = process.env.NODE_PORT;
 

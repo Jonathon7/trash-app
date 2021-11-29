@@ -3,8 +3,8 @@ import axios from "axios";
 import Modal from "@mui/material/Modal";
 import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Container from "@mui/material/Container";
@@ -12,6 +12,8 @@ import TransactionsTable from "./TransactionsTable";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { formatDate } from "../utils/formatDate";
+import TransactionsDialog from "./TransactionsDialog";
+import Notification from "./Notification";
 
 const style = {
   position: "absolute",
@@ -34,6 +36,26 @@ function createCustomersArray(arr) {
   return result;
 }
 
+function createLocationsArray(arr) {
+  let result = [];
+
+  for (let i = 0; i < arr.length; i++) {
+    result.push({ label: arr[i][2].value, id: arr[i][0].value });
+  }
+
+  return result;
+}
+
+function createContainersArray(arr) {
+  let result = [];
+
+  for (let i = 0; i < arr.length; i++) {
+    result.push(arr[i][0].value.toString());
+  }
+
+  return result;
+}
+
 function createTransactionsArray(arr) {
   let result = [];
 
@@ -50,6 +72,8 @@ function createTransactionsArray(arr) {
         obj.value = arr[i][j].value;
       }
 
+      obj.transactionID = arr[i][0].value;
+
       row.push(obj);
     }
     result.push(row);
@@ -62,12 +86,29 @@ export default function TransactionsModal(props) {
   const [customers, setCustomers] = useState([]);
   const [customerName, setCustomerName] = useState("");
   const [customerID, setCustomerID] = useState("");
+  const [locations, setLocations] = useState([]);
+  const [locationAddress, setLocationAddress] = useState("");
+  const [locationID, setLocationID] = useState("");
+  const [containers, setContainers] = useState([]);
+  const [containerID, setContainerID] = useState("");
   const [transactions, setTransactions] = useState([]);
+  const [editingEnabled, setEditingEnabled] = useState(false);
+  const [rowsToDelete, setRowsToDelete] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [severity, setSeverity] = useState("info");
 
   useEffect(() => {
     let isSubscribed = true;
     getCustomers().then((customers) => {
-      return isSubscribed ? setCustomers(customers) : null;
+      return isSubscribed ? setCustomers(customers || []) : null;
+    });
+    getLocations().then((locations) => {
+      return isSubscribed ? setLocations(locations || []) : null;
+    });
+    getContainers().then((containers) => {
+      return isSubscribed ? setContainers(containers || []) : null;
     });
     return () => (isSubscribed = false);
   }, []);
@@ -79,25 +120,127 @@ export default function TransactionsModal(props) {
       .catch((err) => console.log(err));
   }
 
+  async function getLocations() {
+    return axios
+      .get("/api/get-locations")
+      .then((res) => createLocationsArray(res.data))
+      .catch((err) => console.log(err));
+  }
+
+  async function getContainers() {
+    return axios
+      .get("/api/container/")
+      .then((res) => createContainersArray(res.data))
+      .catch((err) => console.log(err));
+  }
+
   function handleAutocompleteChange(e, val) {
     if (val) {
       setCustomerName(val.label);
       setCustomerID(val.id);
+    } else {
+      setCustomerName(val);
+      setCustomerID(val);
     }
   }
 
   function getTransactions() {
-    if (!customerID) return;
+    if (!customerID && !locationID && !containerID) {
+      setTransactions([]);
+      return;
+    }
+
     axios
-      .get(`/api/transactions`, { params: { ID: customerID } })
+      .get(
+        `/api/transactions/${customerID || "null"}/${locationID || "null"}/${
+          containerID || "null"
+        }`
+      )
       .then((res) => {
+        if (!res.data) {
+          toggleNotificationOpen();
+          setNotificationMessage("No Results");
+          setTransactions([]);
+          return;
+        }
         setTransactions(createTransactionsArray(res.data));
       })
       .catch((err) => console.log(err));
   }
 
+  function enableEditing() {
+    setEditingEnabled(true);
+  }
+
+  function disableEditing() {
+    setEditingEnabled(false);
+    setRowsToDelete([]);
+  }
+
+  function selectRow(transactionID) {
+    if (!editingEnabled) {
+      return;
+    }
+
+    const tmp = [...rowsToDelete];
+    const idx = tmp.findIndex((elem) => elem === transactionID);
+
+    if (idx !== -1) {
+      tmp.splice(idx, 1);
+      setRowsToDelete(tmp);
+      return;
+    }
+
+    tmp.push(transactionID);
+    setRowsToDelete(tmp);
+  }
+
+  async function deleteRows() {
+    for (let i = 0; i < rowsToDelete.length; i++) {
+      await axios
+        .delete(`/api/transactions/${rowsToDelete[i]}`)
+        .catch((err) => console.log(err));
+    }
+
+    const tmp = [...transactions];
+
+    for (let i = 0; i < rowsToDelete.length; i++) {
+      const idx = tmp.findIndex(
+        (elem) => elem.transactionID === rowsToDelete[i]
+      );
+      tmp.splice(idx, 1);
+      setTransactions(tmp);
+    }
+
+    setNotificationMessage(`Deleted ${rowsToDelete.length} row(s)`);
+    setSeverity("success");
+    toggleNotificationOpen();
+    setRowsToDelete([]);
+    setEditingEnabled(false);
+  }
+
+  function toggleNotificationOpen() {
+    setNotificationOpen(!notificationOpen);
+  }
+
+  function toggleDialog() {
+    setDialogOpen(!dialogOpen);
+  }
+
   return (
     <React.Fragment>
+      <Notification
+        open={notificationOpen}
+        message={notificationMessage}
+        severity={severity}
+        toggleOpen={toggleNotificationOpen}
+      />
+      <TransactionsDialog
+        open={dialogOpen}
+        toggleDialog={toggleDialog}
+        rows={rowsToDelete.length}
+        deleteRows={deleteRows}
+      />
       <Modal open={props.open} onClose={props.onClose}>
         <Box sx={style}>
           <IconButton
@@ -110,42 +253,153 @@ export default function TransactionsModal(props) {
             <ArrowBackIcon />
           </IconButton>
           <Container maxWidth="xl" sx={{ mt: 10 }}>
-            <Box sx={{ width: 400 }}>
-              <Typography variant="h6" component="h2">
-                Search Transactions By Customer Name
-              </Typography>
-              <FormControl margin="normal" sx={{ width: "100%" }}>
-                <Autocomplete
-                  required
-                  fullWidth
-                  autoComplete
-                  autoSelect
-                  autoHighlight
-                  variant="outlined"
-                  size="small"
-                  value={customerName || null}
-                  onChange={handleAutocompleteChange}
-                  options={customers}
-                  isOptionEqualToValue={(option, value) => {
-                    return option.label === value;
-                  }}
-                  renderOption={(props, option) => {
-                    return (
-                      <li {...props} key={option.id}>
-                        {option.label}
-                      </li>
-                    );
-                  }}
-                  renderInput={(params) => {
-                    return <TextField {...params} label="Customer Name" />;
-                  }}
-                ></Autocomplete>
-              </FormControl>
-              <Button variant="outlined" fullWidth onClick={getTransactions}>
+            <Grid container justifyContent="start" alignItems="center">
+              <Box sx={{ width: 400, m: 1 }}>
+                <FormControl margin="normal" sx={{ width: "100%" }}>
+                  <Autocomplete
+                    fullWidth
+                    disabled={!customers.length}
+                    autoComplete
+                    autoSelect
+                    autoHighlight
+                    variant="outlined"
+                    size="small"
+                    value={customerName || null}
+                    onChange={handleAutocompleteChange}
+                    options={customers}
+                    isOptionEqualToValue={(option, value) => {
+                      return option.label === value;
+                    }}
+                    renderOption={(props, option) => {
+                      return (
+                        <li {...props} key={option.id}>
+                          {option.label}
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => {
+                      return <TextField {...params} label="Customer Name" />;
+                    }}
+                  ></Autocomplete>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ width: 400, m: 1 }}>
+                <FormControl margin="normal" sx={{ width: "100%" }}>
+                  <Autocomplete
+                    fullWidth
+                    disabled={!locations.length}
+                    autoComplete
+                    autoSelect
+                    autoHighlight
+                    variant="outlined"
+                    size="small"
+                    value={locationAddress || null}
+                    onChange={(e, val) => {
+                      val && setLocationAddress(val.label);
+                      val && setLocationID(val.id);
+                      !val && setLocationAddress(val);
+                      !val && setLocationID(val);
+                    }}
+                    options={locations}
+                    isOptionEqualToValue={(option, value) => {
+                      return option.label === value;
+                    }}
+                    renderOption={(props, option) => {
+                      return (
+                        <li {...props} key={option.id}>
+                          {option.label}
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => {
+                      return <TextField {...params} label="Location Address" />;
+                    }}
+                  ></Autocomplete>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ width: 400, m: 1 }}>
+                <FormControl margin="normal" sx={{ width: "100%" }}>
+                  <Autocomplete
+                    fullWidth
+                    disabled={!containers.length}
+                    autoComplete
+                    autoSelect
+                    autoHighlight
+                    variant="outlined"
+                    size="small"
+                    value={containerID || null}
+                    onChange={(e, val) => {
+                      setContainerID(val);
+                    }}
+                    options={containers}
+                    isOptionEqualToValue={(option, value) => {
+                      return option === value;
+                    }}
+                    renderOption={(props, option) => {
+                      return (
+                        <li {...props} key={option}>
+                          {option}
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => {
+                      return <TextField {...params} label="Container ID" />;
+                    }}
+                  ></Autocomplete>
+                </FormControl>
+              </Box>
+
+              <Button
+                variant="outlined"
+                onClick={getTransactions}
+                size="small"
+                sx={{ height: 45, width: 100, m: 1, p: 0 }}
+              >
                 Search
               </Button>
-            </Box>
-            <TransactionsTable transactions={transactions} />
+            </Grid>
+
+            <Grid container direction="row" justifyContent="end">
+              {editingEnabled ? (
+                <React.Fragment>
+                  <Button
+                    variant="outlined"
+                    onClick={disableEditing}
+                    sx={{ m: 1 }}
+                  >
+                    CANCEL
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={toggleDialog}
+                    disabled={!rowsToDelete.length}
+                    sx={{ m: 1 }}
+                  >
+                    DELETE
+                  </Button>
+                </React.Fragment>
+              ) : null}
+
+              {transactions.length ? (
+                <Button
+                  variant="outlined"
+                  onClick={enableEditing}
+                  disabled={editingEnabled}
+                  sx={{ m: 1 }}
+                >
+                  EDIT
+                </Button>
+              ) : null}
+            </Grid>
+
+            <TransactionsTable
+              transactions={transactions}
+              editingEnabled={editingEnabled}
+              selectRow={selectRow}
+              rowsToDelete={rowsToDelete}
+            />
           </Container>
         </Box>
       </Modal>

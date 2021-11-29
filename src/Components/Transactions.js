@@ -19,7 +19,6 @@ import AddFeeForm from "./AddFeeForm";
 import UpdateFeeForm from "./UpdateFeeForm";
 import FeesTable from "./FeesTable";
 import Notification from "./Notification";
-import Error from "./Error";
 import FeesModal from "./FeesModal";
 import money from "money-math";
 import TransactionsModal from "./TransactionsModal";
@@ -42,7 +41,6 @@ function createFeesArray(arr) {
 
 let tonTimeout = null;
 let containerIDTimeout = null;
-let intervalID = null;
 
 export default function Transactions() {
   const [customerID, setCustomerID] = useState("");
@@ -66,7 +64,6 @@ export default function Transactions() {
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState("info");
   const [addOrUpdate, setAddOrUpdate] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState(false);
   const [feesModalOpen, setFeesModalOpen] = useState(false);
   const [transactionsModalOpen, setTransactionsModalOpen] = useState(false);
@@ -126,16 +123,42 @@ export default function Transactions() {
     ]
   );
 
+  const checkForSessionData = useCallback(
+    function () {
+      if (checkedForSessionData) return;
+      axios
+        .get("/api/transaction-form-data")
+        .then((res) => {
+          res.data.customerID && setCustomerID(res.data.customerID);
+          res.data.customerName && setCustomerName(res.data.customerName);
+          res.data.locationID && setLocationID(res.data.locationID);
+          res.data.containerID && setContainerID(res.data.containerID);
+          res.data.ton && setTon(res.data.ton);
+          res.data.servicedDate && setServicedDate(res.data.servicedDate);
+          res.data.comments && setComments(res.data.comments);
+          res.data.landfillTonnageFeeAmount &&
+            setLandfillTonnageFeeAmount(res.data.landfillTonnageFeeAmount);
+          res.data.TNRCCFeeAmount && setTNRCCFeeAmount(res.data.TNRCCFeeAmount);
+          res.data.landfillTonnage &&
+            setLandfillTonnage(res.data.landfillTonnage);
+          res.data.TNRCC && setTNRCC(res.data.TNRCC);
+          res.data.fee && setFee(res.data.fee);
+          res.data.addedFees && setAddedFees(res.data.addedFees);
+          res.data.total && setTotal(res.data.total);
+          setCheckedForSessionData(true);
+        })
+        .catch((err) => console.log(err));
+    },
+    [checkedForSessionData]
+  );
+
   useEffect(() => {
     let isSubscribed = true;
-    getFees().then((fees) => isSubscribed && setFees(fees));
+    getFees().then((fees) => isSubscribed && setFees(fees || []));
     saveTransactionFormData();
-    !checkedForSessionData && checkForSessionData();
-    return () => {
-      isSubscribed = false;
-      clearInterval(intervalID);
-    };
-  }, [saveTransactionFormData, checkedForSessionData]);
+    checkForSessionData();
+    return () => (isSubscribed = false);
+  }, [saveTransactionFormData, checkForSessionData]);
 
   async function getFees() {
     return axios
@@ -145,9 +168,7 @@ export default function Transactions() {
   }
 
   function handleAutocompleteChange(e, val) {
-    if (val) {
-      setFee(val);
-    }
+    setFee(val);
   }
 
   function handleTonInputFocus() {
@@ -436,13 +457,15 @@ export default function Transactions() {
     axios
       .post("/api/fees", { name, amount })
       .then((res) => {
-        if (res.data === "Fee already exists: Name already in use.") {
-          setErrorMessage("Fee already exists: Name already in use.");
-          setTimeout(() => {
-            setErrorMessage("");
-          }, 3000);
+        if (typeof res.data === "string") {
+          setMessage(res.data);
+          setSeverity("error");
+          toggleOpen();
         } else {
           setAddOrUpdate("");
+          setMessage(res.data.message);
+          setSeverity("success");
+          toggleOpen();
           getFees().then((fees) => setFees(fees));
         }
       })
@@ -452,7 +475,10 @@ export default function Transactions() {
   function updateFee(id, feeAmount) {
     axios
       .put("/api/fees", { id, feeAmount })
-      .then(() => {
+      .then((res) => {
+        setMessage(res.data);
+        setSeverity("success");
+        toggleOpen();
         getFees().then((fees) => setFees(fees));
         setAddOrUpdate("");
       })
@@ -501,31 +527,6 @@ export default function Transactions() {
     setTransactionsModalOpen(!transactionsModalOpen);
   }
 
-  function checkForSessionData() {
-    axios
-      .get("/api/transaction-form-data")
-      .then((res) => {
-        res.data.customerID && setCustomerID(res.data.customerID);
-        res.data.customerName && setCustomerName(res.data.customerName);
-        res.data.locationID && setLocationID(res.data.locationID);
-        res.data.containerID && setContainerID(res.data.containerID);
-        res.data.ton && setTon(res.data.ton);
-        res.data.servicedDate && setServicedDate(res.data.servicedDate);
-        res.data.comments && setComments(res.data.comments);
-        res.data.landfillTonnageFeeAmount &&
-          setLandfillTonnageFeeAmount(res.data.landfillTonnageFeeAmount);
-        res.data.TNRCCFeeAmount && setTNRCCFeeAmount(res.data.TNRCCFeeAmount);
-        res.data.landfillTonnage &&
-          setLandfillTonnage(res.data.landfillTonnage);
-        res.data.TNRCC && setTNRCC(res.data.TNRCC);
-        res.data.fee && setFee(res.data.fee);
-        res.data.addedFees && setAddedFees(res.data.addedFees);
-        res.data.total && setTotal(res.data.total);
-        setCheckedForSessionData(true);
-      })
-      .catch((err) => console.log(err));
-  }
-
   function clearForm() {
     axios.delete("/api/clear-form");
 
@@ -543,6 +544,8 @@ export default function Transactions() {
     setFee("");
     setAddedFees([]);
     setTotal("");
+    setTransactionFormError(false);
+    setAddedFeesFormError(false);
   }
 
   return (
@@ -602,6 +605,7 @@ export default function Transactions() {
             <FormControl margin="normal">
               <TextField
                 required
+                disabled={!fees.length}
                 label="Container ID"
                 variant="outlined"
                 size="small"
@@ -643,6 +647,7 @@ export default function Transactions() {
 
           <FormControl margin="normal">
             <TextField
+              disabled={!fees.length}
               label="TON"
               variant="outlined"
               size="small"
@@ -655,6 +660,7 @@ export default function Transactions() {
           <FormControl margin="normal">
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DesktopDatePicker
+                disabled={!fees.length}
                 label="Serviced Date"
                 value={servicedDate}
                 onChange={(date) => setServicedDate(date)}
@@ -671,6 +677,7 @@ export default function Transactions() {
           <FormControl margin="normal">
             <TextField
               multiline
+              disabled={!fees.length}
               label="Comments"
               variant="outlined"
               size="small"
@@ -689,6 +696,7 @@ export default function Transactions() {
             <FormControl margin="normal" size="small">
               <InputLabel id="add-or-update">Add or Update</InputLabel>
               <Select
+                disabled={!fees.length}
                 value={addOrUpdate}
                 label="Add or Update"
                 onChange={(e) => setAddOrUpdate(e.target.value)}
@@ -704,7 +712,6 @@ export default function Transactions() {
               <UpdateFeeForm fees={fees} updateFee={updateFee} />
             ) : null}
           </Grid>
-          {errorMessage && <Error message={errorMessage} />}
         </Grid>
 
         <Grid container direction="column" style={{ width: "40%" }}>
