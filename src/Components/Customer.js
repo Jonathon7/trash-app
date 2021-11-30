@@ -78,6 +78,7 @@ export default function Customer() {
           setMessage("Customer Added");
           setAddID("");
           setAddName("");
+          setAddCustomerError(false);
           updateMUIOptions(null, res.data);
         }
       })
@@ -119,7 +120,7 @@ export default function Customer() {
   };
 
   const validateAddCustomerForm = () => {
-    if (!addID || !addName) {
+    if (!addID || !addName || isNaN(addID)) {
       setAddCustomerError(true);
       return false;
     } else {
@@ -222,7 +223,7 @@ export default function Customer() {
               variant="outlined"
               size="small"
               value={addID}
-              error={addCustomerError && !addID && true}
+              error={(addCustomerError && !addID) || (isNaN(addID) && true)}
               onFocus={() => setErrorMessage("")}
               onChange={(e) => setAddID(e.target.value)}
             ></TextField>

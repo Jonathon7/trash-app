@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
 import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
@@ -56,36 +55,6 @@ export default function UpdateContainerForm(props) {
   useEffect(() => {
     setInitialValues();
   }, [setInitialValues]);
-
-  function updateContainer() {
-    axios
-      .put("/api/container", {
-        ID: ID,
-        cubicYard: cubicYard,
-        type: type,
-        cityOwned: cityOwned,
-        inStock: inStock,
-        setDate: setDate,
-        returnedToStockDate: returnedToStockDate,
-        locationID: locationID || 0,
-        customerID: customerID || 0,
-        comments: comments,
-      })
-      .then((res) => {
-        if (typeof res.data === "string") {
-          props.changeSeverity("error");
-          props.setNotificationMessage(res.data);
-          props.toggleOpen();
-          return;
-        }
-
-        props.changeSeverity("success");
-        props.toggleOpen();
-        props.setNotificationMessage("Container Updated");
-        props.toggleUpdateStatus();
-      })
-      .catch((err) => console.log(err));
-  }
 
   return (
     <React.Fragment>
@@ -230,7 +199,23 @@ export default function UpdateContainerForm(props) {
             onChange={(e) => setComments(e.target.value)}
           ></TextField>
         </FormControl>
-        <Button variant="outlined" onClick={updateContainer}>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            props.updateContainer({
+              ID,
+              cubicYard,
+              type,
+              cityOwned,
+              setDate,
+              inStock,
+              locationID,
+              customerID,
+              comments,
+              returnedToStockDate,
+            })
+          }
+        >
           Submit
         </Button>
       </Grid>

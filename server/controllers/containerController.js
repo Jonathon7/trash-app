@@ -124,9 +124,7 @@ const updateContainer = async (req, res) => {
     returnedToStockDate = formatDate(returnedToStockDate);
 
     const sql1 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate='${setDate}', Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
-
     const sql2 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate='${returnedToStockDate}' WHERE containerId=${ID}`;
-
     const sql3 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
 
     let sql;
@@ -147,7 +145,7 @@ const updateContainer = async (req, res) => {
     });
 
     request.on("requestCompleted", function () {
-      res.status(200).json({ message: "Row Updated." });
+      res.status(200).json({ message: "Container Updated.", row: req.body });
     });
 
     connection.execSql(request);

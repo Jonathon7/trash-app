@@ -17,6 +17,7 @@ import UpdateContainerForm from "./UpdateContainerForm";
 import Error from "./Error";
 import Notification from "./Notification";
 import { formatDate } from "../utils/formatDate";
+import { camelCaseToSnakeCase } from "../utils/camelCaseToSnakeCase";
 
 // SQL Server formats the return array with nested objects and the MUI Autocomplete component wants a different format
 function createContainerIDsArray(arr) {
@@ -38,7 +39,7 @@ export default function Container() {
   const [cubicYard, setCubicYard] = useState("");
   const [type, setType] = useState("");
   const [cityOwned, setCityOwned] = useState("");
-  const [setDateVal, setSetDateVal] = useState("");
+  const [setDate, setSetDate] = useState("");
   const [inStock, setInStock] = useState(false);
   const [locationID, setLocationID] = useState("");
   const [customerID, setCustomerID] = useState("");
@@ -107,7 +108,7 @@ export default function Container() {
         setCubicYard(res.data[2].value);
         setType(res.data[3].value);
         setCityOwned(res.data[4].value ? "YES" : "NO");
-        setSetDateVal(res.data[5].value);
+        setSetDate(res.data[5].value);
         setInStock(res.data[9].value ? "YES" : "NO");
         setLocationID(res.data[6].value);
         setCustomerID(res.data[7].value);
@@ -183,6 +184,63 @@ export default function Container() {
         }
       })
       .catch((err) => console.log(err));
+  }
+
+  function updateContainer(container) {
+    axios
+      .put("/api/container", {
+        ID: container.ID,
+        cubicYard: container.cubicYard,
+        type: container.type,
+        cityOwned: container.cityOwned,
+        inStock: container.inStock,
+        setDate: container.setDate,
+        returnedToStockDate: container.returnedToStockDate,
+        locationID: container.locationID || 0,
+        customerID: container.customerID || 0,
+        comments: container.comments,
+      })
+      .then((res) => {
+        if (typeof res.data === "string") {
+          changeSeverity("error");
+          setNotificationMessage(res.data);
+          toggleOpen();
+          return;
+        }
+
+        const newResults = [];
+        const keys = Object.keys(res.data.row);
+        const values = Object.values(res.data.row);
+
+        for (let i = 0; i < keys.length; i++) {
+          newResults.push({
+            [camelCaseToSnakeCase(keys[i])]: keys[i].includes("Date")
+              ? formatDate(values[i])
+              : values[i],
+          });
+        }
+
+        setResults(newResults);
+        updateStateValues(res.data.row);
+        changeSeverity("success");
+        toggleOpen();
+        setNotificationMessage(res.data.message);
+        toggleUpdateStatus();
+      })
+      .catch((err) => console.log(err));
+  }
+
+  function updateStateValues(container) {
+    setID(container.ID);
+    setCityOwned(container.cityOwned);
+    setComments(container.comments);
+    setCubicYard(container.cubicYard);
+    setCustomerID(container.customerID);
+    setInStock(container.inStock);
+    setLocationID(container.locationID);
+    setReturnedToStockDate(container.returnedToStockDate);
+    setSetDate(container.setDate);
+    setType(container.type);
   }
 
   function toggleUpdateStatus() {
@@ -271,12 +329,13 @@ export default function Container() {
           ) : null}
           {update && (
             <UpdateContainerForm
+              updateContainer={updateContainer}
               toggleUpdateStatus={toggleUpdateStatus}
               ID={ID}
               cubicYard={cubicYard}
               type={type}
               cityOwned={cityOwned}
-              setDate={setDateVal}
+              setDate={setDate}
               inStock={inStock}
               locationID={locationID}
               customerID={customerID}

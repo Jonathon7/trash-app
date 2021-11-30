@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const { json } = require("body-parser");
-let session = require("express-session");
+const session = require("express-session");
+const TediousStore = require("connect-tedious")(session);
 const Customer = require("./controllers/customerController");
 const Location = require("./controllers/locationController");
 const Container = require("./controllers/containerController");
@@ -18,6 +19,20 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7 * 2, // 2 weeks
     },
+    store: new TediousStore({
+      config: {
+        server: process.env.IP,
+        userName: process.env.USER,
+        password: process.env.PASSWORD,
+        options: {
+          port: 1433, // Default Port
+          encrypt: false,
+          trustServerCertificate: true,
+          rowCollectionOnDone: true,
+          database: process.env.DATABASE,
+        },
+      },
+    }),
   })
 );
 

@@ -116,7 +116,6 @@ export default function Location() {
     if (oldValue) {
       let idx = locations.findIndex((elem) => elem === oldValue);
       locations[idx] = newValue;
-      console.log(locations[idx]);
       setAddress1(newValue);
     } else {
       locationsCopy.push(newValue[1].value);
@@ -144,6 +143,7 @@ export default function Location() {
           setAddAddress1("");
           setAddAddress2("");
           setAddAccountType("");
+          setAddLocationFormError(false);
           getLocations().then((locations) => setLocations(locations));
         }
       })
@@ -160,7 +160,7 @@ export default function Location() {
   }
 
   function validateAddLocationForm() {
-    if (!addID || !addAddress1 || !addAccountType) {
+    if (!addID || !addAddress1 || !addAccountType || isNaN(addID)) {
       setAddLocationFormError(true);
       return false;
     }
@@ -240,7 +240,7 @@ export default function Location() {
               label="Enter ID"
               variant="outlined"
               size="small"
-              error={addLocationFormError && !addID && true}
+              error={(addLocationFormError && !addID) || (isNaN(addID) && true)}
               value={addID}
               onChange={(e) => setAddID(e.target.value)}
             ></TextField>
