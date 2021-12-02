@@ -99,9 +99,6 @@ export default function Transactions() {
 
       axios
         .post("/api/transaction-form-data", formData)
-        .then((res) => {
-          // console.log(res.data);
-        })
         .catch((err) => console.log(err));
     },
     [

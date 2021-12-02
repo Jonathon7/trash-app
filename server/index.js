@@ -7,6 +7,7 @@ const Customer = require("./controllers/customerController");
 const Location = require("./controllers/locationController");
 const Container = require("./controllers/containerController");
 const Transaction = require("./controllers/transactionController");
+const { getServerTimezoneOffset } = require("./utils/formatDate");
 
 const app = express();
 app.use(json());
@@ -57,7 +58,7 @@ app.post("/api/container", Container.addContainer);
 // Transaction Form
 app.get("/api/fees", Transaction.getFees);
 app.get(
-  "/api/transactions/:customerID/:locationID/:containerID",
+  "/api/transactions/:customerID/:locationID/:containerID/:startDate/:endDate",
   Transaction.getTransactions
 );
 app.post("/api/transaction", Transaction.createTransaction);

@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Grid from "@mui/material/Grid";
-import FormControl from "@mui/material/FormControl";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Card from "./Card";
-import Error from "./Error";
-import UpdateCustomerForm from "./UpdateCustomerForm";
+import FindCustomerForm from "./FindCustomerForm";
+import AddCustomerForm from "./AddCustomerForm";
 import Notification from "./Notification";
 
-// SQL Server formats the return array with nested objects and the MUI Autocomplete component wants a different format
+// SQL Server formats the return array with nested objects and the MUI Autocomplete component requires a different format
 function createCustomersArray(arr) {
   let result = [];
 
@@ -153,97 +147,28 @@ export default function Customer() {
     <React.Fragment>
       <Notification open={open} message={message} toggleOpen={toggleOpen} />
       <Grid container direction="row" justifyContent="space-evenly">
-        <Grid container direction="column" style={{ width: "40%" }}>
-          <Typography component="h1" variant="h5">
-            Find a Customer
-          </Typography>
-          <FormControl margin="normal">
-            <Autocomplete
-              required
-              autoComplete
-              autoSelect
-              autoHighlight
-              variant="outlined"
-              size="small"
-              value={customerName || null}
-              disabled={update && true}
-              onChange={handleAutocompleteChange}
-              options={customers}
-              isOptionEqualToValue={(option, value) => {
-                return option.label === value;
-              }}
-              renderOption={(props, option) => {
-                return (
-                  <li {...props} key={option.id}>
-                    {option.label}
-                  </li>
-                );
-              }}
-              renderInput={(params) => {
-                return (
-                  <TextField
-                    {...params}
-                    label="Customer Name"
-                    error={getCustomerError && !customerName && true}
-                  />
-                );
-              }}
-            ></Autocomplete>
-          </FormControl>
-          <Button
-            variant="outlined"
-            onClick={getCustomer}
-            disabled={update && true}
-          >
-            Search
-          </Button>
-          {results.length ? <Card title="Customer" data={results} /> : null}
-          {results.length ? (
-            <Button variant="outlined" onClick={toggleUpdateStatus}>
-              Change
-            </Button>
-          ) : null}
-          {update && (
-            <UpdateCustomerForm
-              name={customerName}
-              updateCustomerName={updateCustomerName}
-              toggleUpdateStatus={toggleUpdateStatus}
-            />
-          )}
-        </Grid>
+        <FindCustomerForm
+          customerName={customerName}
+          update={update}
+          handleAutocompleteChange={handleAutocompleteChange}
+          customers={customers}
+          getCustomer={getCustomer}
+          getCustomerError={getCustomerError}
+          results={results}
+          toggleUpdateStatus={toggleUpdateStatus}
+          updateCustomerName={updateCustomerName}
+        />
 
-        <Grid container direction="column" style={{ width: "40%" }}>
-          <Typography component="h1" variant="h5">
-            Add a Customer
-          </Typography>
-          <FormControl margin="normal">
-            <TextField
-              required
-              label="Enter ID"
-              variant="outlined"
-              size="small"
-              value={addID}
-              error={(addCustomerError && !addID) || (isNaN(addID) && true)}
-              onFocus={() => setErrorMessage("")}
-              onChange={(e) => setAddID(e.target.value)}
-            ></TextField>
-          </FormControl>
-          <FormControl style={{ marginBottom: 10 }}>
-            <TextField
-              required
-              label="Enter Customer Name"
-              variant="outlined"
-              size="small"
-              value={addName}
-              error={addCustomerError && !addName && true}
-              onChange={(e) => setAddName(e.target.value)}
-            ></TextField>
-          </FormControl>
-          <Button variant="outlined" onClick={addCustomer}>
-            Add Customer
-          </Button>
-          {errorMessage && <Error message={errorMessage} />}
-        </Grid>
+        <AddCustomerForm
+          addID={addID}
+          addName={addName}
+          addCustomer={addCustomer}
+          addCustomerError={addCustomerError}
+          errorMessage={errorMessage}
+          setAddName={setAddName}
+          setErrorMessage={setErrorMessage}
+          setAddID={setAddID}
+        />
       </Grid>
     </React.Fragment>
   );

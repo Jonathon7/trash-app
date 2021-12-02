@@ -6,10 +6,10 @@ import Modal from "@mui/material/Modal";
 
 const style = {
   position: "absolute",
-  top: "50%",
+  top: "70%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: 450,
   bgcolor: "background.paper",
   boxShadow: 24,
   p: 4,
@@ -18,7 +18,11 @@ const style = {
 export default function FeesModal(props) {
   return (
     <React.Fragment>
-      <Modal open={props.open} onClose={props.onClose}>
+      <Modal
+        open={props.open}
+        onClose={props.onClose}
+        style={{ overflow: "scroll" }}
+      >
         <Box sx={style}>
           <Typography variant="h5" component="h2">
             Fees

@@ -12,6 +12,7 @@ const useStyles = makeStyles({
   tr: {
     "&:hover": {
       background: "rgba(33, 150, 243, .1)",
+      cursor: "pointer",
     },
   },
   selectedTr: {

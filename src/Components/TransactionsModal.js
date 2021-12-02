@@ -14,6 +14,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { formatDate } from "../utils/formatDate";
 import TransactionsDialog from "./TransactionsDialog";
 import Notification from "./Notification";
+import DateFilter from "./DateFilter";
 
 const style = {
   position: "absolute",
@@ -63,16 +64,17 @@ function createTransactionsArray(arr) {
     let row = [];
     for (let j = 0; j < arr[i].length; j++) {
       if (arr[i][j].metadata.colName === "ReturnedToStockDate") continue;
-
       let obj = {};
       obj.label = arr[i][j].metadata.colName;
       if (obj.label.includes("Date") && arr[i][j].value) {
         obj.value = formatDate(arr[i][j].value);
+      } else if (obj.label === "TransactionProcessed") {
+        obj.value = arr[i][j].value ? "YES" : "NO";
       } else {
         obj.value = arr[i][j].value;
       }
 
-      obj.transactionID = arr[i][0].value;
+      obj.servicedDate = arr[i][13].value;
 
       row.push(obj);
     }
@@ -98,6 +100,9 @@ export default function TransactionsModal(props) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [severity, setSeverity] = useState("info");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [dateFilterFormError, setDateFilterFormError] = useState(false);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -152,9 +157,9 @@ export default function TransactionsModal(props) {
 
     axios
       .get(
-        `/api/transactions/${customerID || "null"}/${locationID || "null"}/${
-          containerID || "null"
-        }`
+        `/api/transactions/${customerID || null}/${locationID || null}/${
+          containerID || null
+        }/${startDate || null}/${endDate || null}`
       )
       .then((res) => {
         if (!res.data) {
@@ -254,11 +259,11 @@ export default function TransactionsModal(props) {
           </IconButton>
           <Container maxWidth="xl" sx={{ mt: 10 }}>
             <Grid container justifyContent="start" alignItems="center">
-              <Box sx={{ width: 400, m: 1 }}>
+              <Box sx={{ width: 400 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
-                    disabled={!customers.length}
+                    disabled={!customers.length || editingEnabled}
                     autoComplete
                     autoSelect
                     autoHighlight
@@ -284,11 +289,11 @@ export default function TransactionsModal(props) {
                 </FormControl>
               </Box>
 
-              <Box sx={{ width: 400, m: 1 }}>
+              <Box sx={{ width: 400, ml: 1, mr: 1 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
-                    disabled={!locations.length}
+                    disabled={!locations.length || editingEnabled}
                     autoComplete
                     autoSelect
                     autoHighlight
@@ -319,11 +324,11 @@ export default function TransactionsModal(props) {
                 </FormControl>
               </Box>
 
-              <Box sx={{ width: 400, m: 1 }}>
+              <Box sx={{ width: 400 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
-                    disabled={!containers.length}
+                    disabled={!containers.length || editingEnabled}
                     autoComplete
                     autoSelect
                     autoHighlight
@@ -355,11 +360,22 @@ export default function TransactionsModal(props) {
                 variant="outlined"
                 onClick={getTransactions}
                 size="small"
+                disabled={editingEnabled}
                 sx={{ height: 45, width: 100, m: 1, p: 0 }}
               >
                 Search
               </Button>
             </Grid>
+
+            <DateFilter
+              startDate={startDate}
+              endDate={endDate}
+              dateFilterFormError={dateFilterFormError}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              setDateFilterFormError={setDateFilterFormError}
+              editingEnabled={editingEnabled}
+            />
 
             <Grid container direction="row" justifyContent="end">
               {editingEnabled ? (

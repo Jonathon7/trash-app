@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Grid from "@mui/material/Grid";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import TextField from "@mui/material/TextField";
-import Autocomplete from "@mui/material/Autocomplete";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import Card from "./Card";
-import UpdateLocationForm from "./UpdateLocationForm";
-import Error from "./Error";
+import GetLocationForm from "./GetLocationForm";
+import AddLocationForm from "./AddLocationForm";
 import Notification from "./Notification";
 
 function formatLocationsArray(arr) {
@@ -31,16 +22,17 @@ export default function Location() {
   const [address2, setAddress2] = useState("");
   const [accountType, setAccountType] = useState("");
   const [results, setResults] = useState([]);
+  const [update, setUpdate] = useState(false);
+  const [getLocationError, setGetLocationError] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+
   const [addID, setAddID] = useState("");
   const [addAddress1, setAddAddress1] = useState("");
   const [addAddress2, setAddAddress2] = useState("");
   const [addAccountType, setAddAccountType] = useState("PERM");
-  const [update, setUpdate] = useState(false);
   const [addLocationFormError, setAddLocationFormError] = useState(false);
-  const [getLocationError, setGetLocationError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     let isSubscribed = true;
@@ -176,118 +168,34 @@ export default function Location() {
     <React.Fragment>
       <Notification open={open} message={message} toggleOpen={toggleOpen} />
       <Grid container direction="row" justifyContent="space-evenly">
-        <Grid container direction="column" style={{ width: "40%" }}>
-          <Typography component="h1" variant="h5">
-            Find a Location
-          </Typography>
-          <FormControl margin="normal">
-            <Autocomplete
-              required
-              autoComplete
-              autoSelect
-              autoHighlight
-              variant="outlined"
-              size="small"
-              disabled={update && true}
-              value={address1 || null}
-              onChange={(e, val) => {
-                setAddress1(val);
-                setResults([]);
-              }}
-              options={locations}
-              renderInput={(params) => {
-                return (
-                  <TextField
-                    {...params}
-                    label="Location Address"
-                    error={getLocationError && !address1 && true}
-                  />
-                );
-              }}
-            ></Autocomplete>
-          </FormControl>
-          <Button
-            variant="outlined"
-            onClick={getLocation}
-            disabled={update && true}
-          >
-            Search
-          </Button>
-          {results.length ? <Card title="Location" data={results} /> : null}
-          {results.length ? (
-            <Button variant="outlined" onClick={toggleUpdateStatus}>
-              Change
-            </Button>
-          ) : null}
+        <GetLocationForm
+          address1={address1}
+          address2={address2}
+          update={update}
+          setAddress1={setAddress1}
+          setResults={setResults}
+          locations={locations}
+          getLocationError={getLocationError}
+          getLocation={getLocation}
+          results={results}
+          toggleUpdateStatus={toggleUpdateStatus}
+          accountType={accountType}
+          updateLocation={updateLocation}
+        />
 
-          {update && (
-            <UpdateLocationForm
-              address1={address1}
-              address2={address2}
-              accountType={accountType}
-              toggleUpdateStatus={toggleUpdateStatus}
-              updateLocation={updateLocation}
-            />
-          )}
-        </Grid>
-        <Grid container direction="column" style={{ width: "40%" }}>
-          <Typography component="h1" variant="h5">
-            Add a Location
-          </Typography>
-          <FormControl margin="normal">
-            <TextField
-              required
-              label="Enter ID"
-              variant="outlined"
-              size="small"
-              error={(addLocationFormError && !addID) || (isNaN(addID) && true)}
-              value={addID}
-              onChange={(e) => setAddID(e.target.value)}
-            ></TextField>
-          </FormControl>
-
-          <FormControl margin="normal">
-            <TextField
-              required
-              label="Enter Address Line 1"
-              variant="outlined"
-              size="small"
-              error={addLocationFormError && !addAddress1 && true}
-              value={addAddress1}
-              onChange={(e) => setAddAddress1(e.target.value)}
-            ></TextField>
-          </FormControl>
-
-          <FormControl margin="normal">
-            <TextField
-              label="Enter Address Line 2"
-              variant="outlined"
-              size="small"
-              value={addAddress2}
-              onChange={(e) => setAddAddress2(e.target.value)}
-            ></TextField>
-          </FormControl>
-
-          <FormControl margin="normal" size="small">
-            <InputLabel id="account-type">Account Type</InputLabel>
-            <Select
-              labelId="account-type"
-              label="account-type"
-              variant="outlined"
-              value={addAccountType}
-              error={addLocationFormError && !addAccountType && true}
-              onChange={(e) => setAddAccountType(e.target.value)}
-            >
-              <MenuItem value={"PERM"}>PERM</MenuItem>
-              <MenuItem value={"TEMP"}>TEMP</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Button variant="outlined" onClick={addLocation}>
-            Submit
-          </Button>
-          {errorMessage && <Error message={errorMessage} />}
-        </Grid>
+        <AddLocationForm
+          addID={addID}
+          setAddID={setAddID}
+          addLocationFormError={addLocationFormError}
+          addAddress1={addAddress1}
+          setAddress1={setAddress1}
+          addAddress2={addAddress2}
+          setAddAddress={setAddAddress2}
+          addAccountType={addAccountType}
+          setAccountType={setAccountType}
+          addLocation={addLocation}
+          errorMessage={errorMessage}
+        />
       </Grid>
     </React.Fragment>
   );

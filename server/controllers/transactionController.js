@@ -42,21 +42,7 @@ const createTransaction = (req, res) => {
         servicedDate,
       } = req.body;
 
-      // Transaction Date - uses current date
-      const m = new Date();
-      const date =
-        m.getFullYear() +
-        "/" +
-        ("0" + (m.getMonth() + 1)).slice(-2) +
-        "/" +
-        ("0" + m.getDate()).slice(-2) +
-        " " +
-        ("0" + m.getHours()).slice(-2) +
-        ":" +
-        ("0" + m.getMinutes()).slice(-2) +
-        ":" +
-        ("0" + m.getSeconds()).slice(-2);
-
+      const transactionDate = formatDate(new Date());
       const setDate = formatDate(dates[0].value);
       servicedDate = formatDate(servicedDate);
 
@@ -65,8 +51,8 @@ const createTransaction = (req, res) => {
         return;
       }
 
-      const sql1 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment, ServicedDate) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}', '${servicedDate}')`;
-      const sql2 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${date}', ${ton}, '${setDate}', '${comments}')`;
+      const sql1 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment, ServicedDate) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${transactionDate}', ${ton}, '${setDate}', '${comments}', '${servicedDate}')`;
+      const sql2 = `INSERT INTO ${process.env.transactionsTable} (CustomerId, LocationId, ContainerId, FeeId, Name, Amount, TransactionDate, Tonnage, SetDate, Comment) VALUES (${customerID}, ${locationID}, ${containerID}, ${feeID}, '${feeName}', ${feeAmount}, '${transactionDate}', ${ton}, '${setDate}', '${comments}')`;
 
       const sql = servicedDate ? sql1 : sql2;
 
@@ -199,19 +185,30 @@ const getDates = (id) =>
 
 const getTransactions = (req, res) => {
   openDbConnection().then((connection) => {
-    const { customerID, locationID, containerID } = req.params;
+    const { customerID, locationID, containerID, startDate, endDate } =
+      req.params;
 
     let sql = `SELECT * FROM ${process.env.transactionsTable}`;
 
     if (customerID !== "null") sql += `WHERE CustomerId = ${customerID}`;
+
     if (locationID !== "null")
       sql += `${
-        sql.includes("WHERE") ? "AND" : "WHERE"
+        sql.includes("WHERE") ? "OR" : "WHERE"
       } LocationId = '${locationID}'`;
+
     if (containerID !== "null")
       sql += `${
-        sql.includes("WHERE") ? "AND" : "WHERE"
+        sql.includes("WHERE") ? "OR" : "WHERE"
       } ContainerId = ${containerID}`;
+
+    if (startDate !== "null" && endDate !== "null") {
+      sql += `AND ServicedDate BETWEEN '${formatDate(
+        startDate
+      )}' AND '${formatDate(endDate)}'`;
+    }
+
+    sql += "ORDER BY CustomerId";
 
     let results;
     const request = new Request(sql, (err) => {

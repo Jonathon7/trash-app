@@ -10,6 +10,7 @@ function camelCaseToSnakeCase(str) {
         snakeCased += str[i].toUpperCase();
         continue;
       }
+
       snakeCased += `${str[i].toUpperCase()}_`;
     } else {
       snakeCased += str[i].toUpperCase();
