@@ -15,6 +15,7 @@ import { formatDate } from "../utils/formatDate";
 import TransactionsDialog from "./TransactionsDialog";
 import Notification from "./Notification";
 import DateFilter from "./DateFilter";
+import Switch from "./Switch";
 
 const style = {
   position: "absolute",
@@ -103,6 +104,8 @@ export default function TransactionsModal(props) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [dateFilterFormError, setDateFilterFormError] = useState(false);
+  const [showOnlyUnprocessedTransactions, setShowOnlyUnprocessedTransactions] =
+    useState(false);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -150,7 +153,7 @@ export default function TransactionsModal(props) {
   }
 
   function getTransactions() {
-    if (!customerID && !locationID && !containerID) {
+    if (!customerID && !locationID && !containerID && !startDate && !endDate) {
       setTransactions([]);
       return;
     }
@@ -159,7 +162,9 @@ export default function TransactionsModal(props) {
       .get(
         `/api/transactions/${customerID || null}/${locationID || null}/${
           containerID || null
-        }/${startDate || null}/${endDate || null}`
+        }/${startDate || null}/${
+          endDate || null
+        }/${showOnlyUnprocessedTransactions}`
       )
       .then((res) => {
         if (!res.data) {
@@ -182,10 +187,8 @@ export default function TransactionsModal(props) {
     setRowsToDelete([]);
   }
 
-  function selectRow(transactionID) {
-    if (!editingEnabled) {
-      return;
-    }
+  function selectRow(transactionID, transactionProcessed) {
+    if (!editingEnabled || transactionProcessed === "YES") return;
 
     const tmp = [...rowsToDelete];
     const idx = tmp.findIndex((elem) => elem === transactionID);
@@ -230,6 +233,10 @@ export default function TransactionsModal(props) {
 
   function toggleDialog() {
     setDialogOpen(!dialogOpen);
+  }
+
+  function switchOnChange() {
+    setShowOnlyUnprocessedTransactions(!showOnlyUnprocessedTransactions);
   }
 
   return (
@@ -375,6 +382,12 @@ export default function TransactionsModal(props) {
               setEndDate={setEndDate}
               setDateFilterFormError={setDateFilterFormError}
               editingEnabled={editingEnabled}
+            />
+
+            <Switch
+              label="Show Only Unprocessed Transactions"
+              onChange={switchOnChange}
+              disabled={editingEnabled}
             />
 
             <Grid container direction="row" justifyContent="end">

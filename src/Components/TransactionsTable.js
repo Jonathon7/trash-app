@@ -17,6 +17,7 @@ const useStyles = makeStyles({
   },
   selectedTr: {
     background: "rgba(33, 150, 243, .4)",
+    cursor: "pointer",
   },
 });
 
@@ -43,7 +44,7 @@ export default function TransactionsTable(props) {
             return (
               <TableRow
                 key={index}
-                onClick={() => props.selectRow(row[0].value)}
+                onClick={() => props.selectRow(row[0].value, row[8].value)}
                 className={
                   !props.editingEnabled
                     ? null

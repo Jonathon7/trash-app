@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
 import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -22,6 +20,7 @@ import Notification from "./Notification";
 import FeesModal from "./FeesModal";
 import money from "money-math";
 import TransactionsModal from "./TransactionsModal";
+import TransactionAppBar from "./TransactionsAppBar";
 
 function createFeesArray(arr) {
   let result = [];
@@ -76,10 +75,10 @@ export default function Transactions() {
 
   const toggleFeesModal = () => setFeesModalOpen(!feesModalOpen);
 
+  // All form data is stored server side in a mssql session store
   const saveTransactionFormData = useCallback(
     function saveTransactionFormData() {
       if (!checkedForSessionData) return;
-
       const formData = {
         customerID,
         customerName,
@@ -120,6 +119,7 @@ export default function Transactions() {
     ]
   );
 
+  // checks for session data on component mount
   const checkForSessionData = useCallback(
     function () {
       if (checkedForSessionData) return;
@@ -553,42 +553,25 @@ export default function Transactions() {
         toggleOpen={toggleOpen}
         severity={severity}
       />
+
       <FeesModal open={feesModalOpen} onClose={toggleFeesModal} fees={fees} />
+
       <TransactionsModal
         open={transactionsModalOpen}
         onClose={toggleTransactionsModal}
       />
-      <AppBar
-        position="static"
-        color="transparent"
-        sx={{ width: "87%", m: "auto", mb: 3 }}
-      >
-        <Toolbar variant="dense">
-          <Grid container direction="row" justifyContent="space-between">
-            <Button variant="text" sx={{ mr: 2 }} onClick={createTransaction}>
-              CREATE TRANSACTION
-            </Button>
-            <Button
-              variant="text"
-              sx={{ mr: 2 }}
-              onClick={toggleTransactionsModal}
-            >
-              SHOW TRANSACTIONS
-            </Button>
-            <Button variant="text" sx={{ mr: 2 }} onClick={toggleFeesModal}>
-              SHOW FEES
-            </Button>
-            <Button variant="text" sx={{ mr: 2 }} onClick={clearForm}>
-              CLEAR FORM
-            </Button>
-            <Typography variant="h6" component="div">
-              {addedFees.length ? `$${total}` : ""}
-            </Typography>
-          </Grid>
-        </Toolbar>
-      </AppBar>
+
+      <TransactionAppBar
+        createTransaction={createTransaction}
+        toggleTransactionsModal={toggleTransactionsModal}
+        toggleFeesModal={toggleFeesModal}
+        clearForm={clearForm}
+        addedFees={addedFees.length}
+        total={total}
+      />
+
       <Grid container direction="row" justifyContent="space-evenly">
-        <Grid container direction="column" style={{ width: "40%" }}>
+        <Grid container direction="column" sx={{ width: "40%" }}>
           <Typography component="h1" variant="h5">
             Create Transaction
           </Typography>
@@ -711,7 +694,7 @@ export default function Transactions() {
           </Grid>
         </Grid>
 
-        <Grid container direction="column" style={{ width: "40%" }}>
+        <Grid container direction="column" sx={{ width: "40%" }}>
           <Typography component="h1" variant="h5">
             Add Fees
           </Typography>

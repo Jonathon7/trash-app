@@ -185,30 +185,43 @@ const getDates = (id) =>
 
 const getTransactions = (req, res) => {
   openDbConnection().then((connection) => {
-    const { customerID, locationID, containerID, startDate, endDate } =
-      req.params;
+    const {
+      customerID,
+      locationID,
+      containerID,
+      startDate,
+      endDate,
+      showOnlyUnprocessedTransactions,
+    } = req.params;
 
     let sql = `SELECT * FROM ${process.env.transactionsTable}`;
 
-    if (customerID !== "null") sql += `WHERE CustomerId = ${customerID}`;
+    if (customerID !== "null") sql += ` WHERE (CustomerId = ${customerID}`;
 
     if (locationID !== "null")
       sql += `${
-        sql.includes("WHERE") ? "OR" : "WHERE"
-      } LocationId = '${locationID}'`;
+        sql.includes("WHERE") ? " OR " : " WHERE ("
+      } LocationId = ${locationID}`;
 
     if (containerID !== "null")
       sql += `${
-        sql.includes("WHERE") ? "OR" : "WHERE"
+        sql.includes("WHERE") ? " OR " : " WHERE ("
       } ContainerId = ${containerID}`;
 
+    sql.includes("WHERE") && (sql += ")");
+
     if (startDate !== "null" && endDate !== "null") {
-      sql += `AND ServicedDate BETWEEN '${formatDate(
-        startDate
-      )}' AND '${formatDate(endDate)}'`;
+      !sql.includes("WHERE") ? (sql += " WHERE ") : (sql += " AND ");
+
+      sql += `ServicedDate BETWEEN '${formatDate(startDate)}' AND '${formatDate(
+        endDate
+      )}'`;
     }
 
-    sql += "ORDER BY CustomerId";
+    showOnlyUnprocessedTransactions === "true" &&
+      (sql += "AND TransactionProcessed = 0");
+
+    sql += " ORDER BY CustomerId";
 
     let results;
     const request = new Request(sql, (err) => {

@@ -58,7 +58,7 @@ app.post("/api/container", Container.addContainer);
 // Transaction Form
 app.get("/api/fees", Transaction.getFees);
 app.get(
-  "/api/transactions/:customerID/:locationID/:containerID/:startDate/:endDate",
+  "/api/transactions/:customerID/:locationID/:containerID/:startDate/:endDate/:showOnlyUnprocessedTransactions",
   Transaction.getTransactions
 );
 app.post("/api/transaction", Transaction.createTransaction);
