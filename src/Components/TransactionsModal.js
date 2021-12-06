@@ -374,22 +374,23 @@ export default function TransactionsModal(props) {
               </Button>
             </Grid>
 
-            <DateFilter
-              startDate={startDate}
-              endDate={endDate}
-              dateFilterFormError={dateFilterFormError}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-              setDateFilterFormError={setDateFilterFormError}
-              editingEnabled={editingEnabled}
-            />
+            <Grid container direction="row" alignItems="center">
+              <DateFilter
+                startDate={startDate}
+                endDate={endDate}
+                dateFilterFormError={dateFilterFormError}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                setDateFilterFormError={setDateFilterFormError}
+                editingEnabled={editingEnabled}
+              />
 
-            <Switch
-              label="Show Only Unprocessed Transactions"
-              onChange={switchOnChange}
-              disabled={editingEnabled}
-            />
-
+              <Switch
+                label="Show Only Unprocessed Transactions"
+                onChange={switchOnChange}
+                disabled={editingEnabled}
+              />
+            </Grid>
             <Grid container direction="row" justifyContent="end">
               {editingEnabled ? (
                 <React.Fragment>

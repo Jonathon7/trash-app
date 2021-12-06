@@ -5,7 +5,7 @@ import MUISwitch from "@mui/material/Switch";
 
 export default function Switchs(props) {
   return (
-    <FormGroup>
+    <FormGroup sx={{ m: 3 }}>
       <FormControlLabel
         disabled={props.disabled || false}
         control={<MUISwitch onChange={props.onChange} />}

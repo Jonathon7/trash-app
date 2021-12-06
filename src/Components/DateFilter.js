@@ -9,7 +9,7 @@ import LocalizationProvider from "@mui/lab/LocalizationProvider";
 export default function DateFilter(props) {
   return (
     <React.Fragment>
-      <Grid container direction="row">
+      <Grid container direction="row" sx={{ width: "fit-content" }}>
         <FormControl margin="normal" sx={{ mr: 1 }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DesktopDatePicker

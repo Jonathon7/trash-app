@@ -7,7 +7,6 @@ const Customer = require("./controllers/customerController");
 const Location = require("./controllers/locationController");
 const Container = require("./controllers/containerController");
 const Transaction = require("./controllers/transactionController");
-const { getServerTimezoneOffset } = require("./utils/formatDate");
 
 const app = express();
 app.use(json());

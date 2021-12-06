@@ -221,7 +221,7 @@ const getTransactions = (req, res) => {
     showOnlyUnprocessedTransactions === "true" &&
       (sql += "AND TransactionProcessed = 0");
 
-    sql += " ORDER BY CustomerId";
+    sql += " ORDER BY ServicedDate";
 
     let results;
     const request = new Request(sql, (err) => {
