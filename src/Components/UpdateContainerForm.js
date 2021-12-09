@@ -12,6 +12,7 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import Notification from "./Notification";
 
 export default function UpdateContainerForm(props) {
   const [ID, setID] = useState("");
@@ -24,6 +25,9 @@ export default function UpdateContainerForm(props) {
   const [customerID, setCustomerID] = useState("");
   const [comments, setComments] = useState("");
   const [returnedToStockDate, setReturnedToStockDate] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [severity, setSeverity] = useState("");
 
   const setInitialValues = useCallback(() => {
     setID(props.ID);
@@ -56,8 +60,18 @@ export default function UpdateContainerForm(props) {
     setInitialValues();
   }, [setInitialValues]);
 
+  function toggleOpen() {
+    setOpen(!open);
+  }
+
   return (
     <React.Fragment>
+      <Notification
+        open={open}
+        severity={severity}
+        message={message}
+        toggleOpen={toggleOpen}
+      />
       <Grid
         container
         direction="column"
@@ -174,7 +188,7 @@ export default function UpdateContainerForm(props) {
             label="Customer ID"
             variant="outlined"
             size="small"
-            value={customerID}
+            value={!returnedToStockDate ? customerID : 0}
             onChange={(e) => setCustomerID(e.target.value)}
           ></TextField>
         </FormControl>
@@ -185,7 +199,7 @@ export default function UpdateContainerForm(props) {
             label="Location ID"
             variant="outlined"
             size="small"
-            value={locationID}
+            value={!returnedToStockDate ? locationID : 0}
             onChange={(e) => setLocationID(e.target.value)}
           ></TextField>
         </FormControl>
@@ -201,7 +215,16 @@ export default function UpdateContainerForm(props) {
         </FormControl>
         <Button
           variant="outlined"
-          onClick={() =>
+          onClick={() => {
+            if (!setDate && !returnedToStockDate) {
+              toggleOpen();
+              setMessage(
+                "Every container must have either a set date or returned to stock date"
+              );
+              setSeverity("error");
+              return;
+            }
+
             props.updateContainer({
               ID,
               cubicYard,
@@ -209,12 +232,12 @@ export default function UpdateContainerForm(props) {
               cityOwned,
               setDate,
               inStock,
-              locationID,
-              customerID,
+              locationID: locationID,
+              customerID: customerID,
               comments,
               returnedToStockDate,
-            })
-          }
+            });
+          }}
         >
           Submit
         </Button>

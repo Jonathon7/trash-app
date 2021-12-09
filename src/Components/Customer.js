@@ -7,6 +7,7 @@ import Notification from "./Notification";
 
 // SQL Server formats the return array with nested objects and the MUI Autocomplete component requires a different format
 function createCustomersArray(arr) {
+  console.log(arr);
   let result = [];
 
   for (let i = 0; i < arr.length; i++) {
@@ -54,6 +55,7 @@ export default function Customer() {
         let result = [];
         result.push({ ID: res.data[0][0].value });
         result.push({ Name: res.data[0][1].value });
+        result.push({ TAX_EXEMPT: res.data[0][2].value ? "YES" : "NO" });
         setResults(result);
       })
       .catch((err) => console.log(err));

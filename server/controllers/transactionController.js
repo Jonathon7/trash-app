@@ -1,6 +1,8 @@
 let Request = require("tedious").Request;
 let { openDbConnection } = require("../database");
 const { formatDate } = require("../utils/formatDate");
+const startOfDay = require("../utils/startOfDay");
+const endOfDay = require("../utils/endOfDay");
 
 const getFees = (req, res) => {
   openDbConnection().then((connection) => {
@@ -213,15 +215,17 @@ const getTransactions = (req, res) => {
     if (startDate !== "null" && endDate !== "null") {
       !sql.includes("WHERE") ? (sql += " WHERE ") : (sql += " AND ");
 
-      sql += `ServicedDate BETWEEN '${formatDate(startDate)}' AND '${formatDate(
-        endDate
-      )}'`;
+      sql += `ServicedDate BETWEEN '${formatDate(
+        startOfDay(startDate)
+      )}' AND '${formatDate(endOfDay(endDate))}'`;
     }
 
     showOnlyUnprocessedTransactions === "true" &&
       (sql += "AND TransactionProcessed = 0");
 
     sql += " ORDER BY ServicedDate";
+
+    console.log(sql);
 
     let results;
     const request = new Request(sql, (err) => {
@@ -289,6 +293,121 @@ const deleteTransactions = (req, res) => {
   });
 };
 
+const getBillFeeAmounts = (req, res) => {
+  openDbConnection().then((connection) => {
+    let result;
+
+    const request = new Request(
+      `SELECT FeeId, Name, Amount FROM ${process.env.feesTable} WHERE Name = 'SERVICE CHARGE' OR Name = 'DAILY RENT 30YD OT' OR Name = 'DAILY RENT 40YD OT' OR Name = 'MONTHLY RENT 30YD OT' OR Name = 'MONTHLY RENT 40YD OT' OR Name = 'DAILY RENT COMPACTOR';`,
+      (err) => {
+        if (err) {
+          throw err;
+        }
+        connection.close();
+      }
+    );
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows[0]) {
+        result = rows;
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      res.status(200).json(result);
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const addServiceCharge = (req, res) => {
+  openDbConnection().then((connection) => {
+    const { startDate, endDate, feeID, Name, Amount } = req.body;
+
+    const sql = `EXEC [TestTrash].[dbo].[MonthlyServiceCharge] @ServiceStartDate = '${formatDate(
+      startOfDay(startDate)
+    )}', @ServiceEndDate = '${formatDate(
+      endOfDay(endDate)
+    )}', @FeeId = ${feeID}, @Name = '${Name}', @Amount = ${Amount}, @TransactionProcessed = 1;`;
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
+      }
+      connection.close();
+    });
+
+    request.on("requestCompleted", function () {
+      res.sendStatus(200);
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const addMonthlyRentCharge = (req, res) => {
+  openDbConnection().then((connection) => {
+    const {
+      startDate,
+      endDate,
+      DAILY_RENT_30YD_OT,
+      DAILY_RENT_40YD_OT,
+      MONTHLY_RENT_30YD_OT,
+      MONTHLY_RENT_40YD_OT,
+      DAILY_RENT_COMPACTOR,
+    } = req.body;
+
+    const sql = `EXEC [TestTrash].[dbo].[MonthlyRentFee] @ServiceStartDate = '${formatDate(
+      startOfDay(startDate)
+    )}', @ServiceEndDate = '${formatDate(
+      endOfDay(endDate)
+    )}', @DAILYRENT30YDOT = '${DAILY_RENT_30YD_OT}'
+    ,@DAILYRENT40YDOT = '${DAILY_RENT_40YD_OT}'
+    ,@MONTHLYRENT30YDOT = '${MONTHLY_RENT_30YD_OT}'
+    ,@MONTHLYRENT40YDOT = '${MONTHLY_RENT_40YD_OT}'
+    ,@DAILYRENTCOMPACTOR = '${DAILY_RENT_COMPACTOR}', @TransactionProcessed = 1;`;
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
+      }
+      connection.close();
+    });
+
+    request.on("requestCompleted", function () {
+      res.sendStatus(200);
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const bill = (req, res) => {
+  openDbConnection().then((connection) => {
+    const { startDate, endDate } = req.body;
+
+    const sql = `UPDATE ${
+      process.env.transactionsTable
+    } SET TransactionProcessed = 1 WHERE ServicedDate BETWEEN '${formatDate(
+      startOfDay(startDate)
+    )}' AND '${formatDate(endOfDay(endDate))}'`;
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
+      }
+      connection.close();
+    });
+
+    request.on("requestCompleted", function () {
+      res.sendStatus(200);
+    });
+
+    connection.execSql(request);
+  });
+};
+
 module.exports = {
   getFees,
   createTransaction,
@@ -300,4 +419,8 @@ module.exports = {
   clearForm,
   updateTransaction,
   deleteTransactions,
+  getBillFeeAmounts,
+  addServiceCharge,
+  addMonthlyRentCharge,
+  bill,
 };

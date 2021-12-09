@@ -21,6 +21,7 @@ import FeesModal from "./FeesModal";
 import money from "money-math";
 import TransactionsModal from "./TransactionsModal";
 import TransactionAppBar from "./TransactionsAppBar";
+import BillModal from "./BillModal";
 
 function createFeesArray(arr) {
   let result = [];
@@ -66,6 +67,7 @@ export default function Transactions() {
   const [infoMessage, setInfoMessage] = useState(false);
   const [feesModalOpen, setFeesModalOpen] = useState(false);
   const [transactionsModalOpen, setTransactionsModalOpen] = useState(false);
+  const [billModalOpen, setBillModalOpen] = useState(false);
   const [checkedForSessionData, setCheckedForSessionData] = useState(false);
   const [requiredFees] = useState([
     "PULL FEE",
@@ -524,6 +526,10 @@ export default function Transactions() {
     setTransactionsModalOpen(!transactionsModalOpen);
   }
 
+  function toggleBillModal() {
+    setBillModalOpen(!billModalOpen);
+  }
+
   function clearForm() {
     axios.delete("/api/clear-form");
 
@@ -561,10 +567,13 @@ export default function Transactions() {
         onClose={toggleTransactionsModal}
       />
 
+      <BillModal open={billModalOpen} close={toggleBillModal} />
+
       <TransactionAppBar
         createTransaction={createTransaction}
         toggleTransactionsModal={toggleTransactionsModal}
         toggleFeesModal={toggleFeesModal}
+        toggleBillModal={toggleBillModal}
         clearForm={clearForm}
         addedFees={addedFees.length}
         total={total}

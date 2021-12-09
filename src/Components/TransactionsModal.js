@@ -7,7 +7,7 @@ import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
-import Container from "@mui/material/Container";
+import Card from "@mui/material/Card";
 import TransactionsTable from "./TransactionsTable";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -32,7 +32,10 @@ function createCustomersArray(arr) {
   let result = [];
 
   for (let i = 0; i < arr.length; i++) {
-    result.push({ label: arr[i][1].value, id: arr[i][0].value });
+    result.push({
+      label: arr[i][1].value + ", " + arr[i][0].value,
+      id: arr[i][0].value,
+    });
   }
 
   return result;
@@ -42,7 +45,10 @@ function createLocationsArray(arr) {
   let result = [];
 
   for (let i = 0; i < arr.length; i++) {
-    result.push({ label: arr[i][2].value, id: arr[i][0].value });
+    result.push({
+      label: arr[i][2].value + ", " + arr[i][0].value,
+      id: arr[i][0].value,
+    });
   }
 
   return result;
@@ -106,6 +112,7 @@ export default function TransactionsModal(props) {
   const [dateFilterFormError, setDateFilterFormError] = useState(false);
   const [showOnlyUnprocessedTransactions, setShowOnlyUnprocessedTransactions] =
     useState(false);
+  const [colorCode, setColorCode] = useState(false);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -239,6 +246,10 @@ export default function TransactionsModal(props) {
     setShowOnlyUnprocessedTransactions(!showOnlyUnprocessedTransactions);
   }
 
+  function colorSwitchOnChange() {
+    setColorCode(!colorCode);
+  }
+
   return (
     <React.Fragment>
       <Notification
@@ -253,7 +264,16 @@ export default function TransactionsModal(props) {
         rows={rowsToDelete.length}
         deleteRows={deleteRows}
       />
-      <Modal open={props.open} onClose={props.onClose}>
+      <Modal
+        open={props.open}
+        onClose={props.onClose}
+        style={{
+          overflowY: "scroll",
+          overflowX: "hidden",
+          height: "100%",
+          background: "#fff",
+        }}
+      >
         <Box sx={style}>
           <IconButton
             onClick={props.onClose}
@@ -264,9 +284,9 @@ export default function TransactionsModal(props) {
           >
             <ArrowBackIcon />
           </IconButton>
-          <Container maxWidth="xl" sx={{ mt: 10 }}>
+          <Card sx={{ width: "80%", m: "auto", mt: 6, p: 3 }}>
             <Grid container justifyContent="start" alignItems="center">
-              <Box sx={{ width: 400 }}>
+              <Box sx={{ width: 350 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
@@ -290,13 +310,13 @@ export default function TransactionsModal(props) {
                       );
                     }}
                     renderInput={(params) => {
-                      return <TextField {...params} label="Customer Name" />;
+                      return <TextField {...params} label="Customer" />;
                     }}
                   ></Autocomplete>
                 </FormControl>
               </Box>
 
-              <Box sx={{ width: 400, ml: 1, mr: 1 }}>
+              <Box sx={{ width: 250, ml: 1, mr: 1 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
@@ -325,13 +345,13 @@ export default function TransactionsModal(props) {
                       );
                     }}
                     renderInput={(params) => {
-                      return <TextField {...params} label="Location Address" />;
+                      return <TextField {...params} label="Location" />;
                     }}
                   ></Autocomplete>
                 </FormControl>
               </Box>
 
-              <Box sx={{ width: 400 }}>
+              <Box sx={{ width: 150 }}>
                 <FormControl margin="normal" sx={{ width: "100%" }}>
                   <Autocomplete
                     fullWidth
@@ -374,20 +394,26 @@ export default function TransactionsModal(props) {
               </Button>
             </Grid>
 
-            <Grid container direction="row" alignItems="center">
-              <DateFilter
-                startDate={startDate}
-                endDate={endDate}
-                dateFilterFormError={dateFilterFormError}
-                setStartDate={setStartDate}
-                setEndDate={setEndDate}
-                setDateFilterFormError={setDateFilterFormError}
-                editingEnabled={editingEnabled}
-              />
+            <DateFilter
+              startDate={startDate}
+              endDate={endDate}
+              dateFilterFormError={dateFilterFormError}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              setDateFilterFormError={setDateFilterFormError}
+              editingEnabled={editingEnabled}
+            />
 
+            <Grid container direction="row" alignItems="center">
               <Switch
                 label="Show Only Unprocessed Transactions"
                 onChange={switchOnChange}
+                disabled={editingEnabled}
+              />
+
+              <Switch
+                label="Color Code"
+                onChange={colorSwitchOnChange}
                 disabled={editingEnabled}
               />
             </Grid>
@@ -423,14 +449,15 @@ export default function TransactionsModal(props) {
                 </Button>
               ) : null}
             </Grid>
+          </Card>
 
-            <TransactionsTable
-              transactions={transactions}
-              editingEnabled={editingEnabled}
-              selectRow={selectRow}
-              rowsToDelete={rowsToDelete}
-            />
-          </Container>
+          <TransactionsTable
+            transactions={transactions}
+            editingEnabled={editingEnabled}
+            selectRow={selectRow}
+            rowsToDelete={rowsToDelete}
+            colorCode={colorCode}
+          />
         </Box>
       </Modal>
     </React.Fragment>

@@ -1,7 +1,8 @@
 function formatDate(m) {
   if (!m) return null;
 
-  if (typeof m === "string") {
+  // either a string date or a date in milliseconds
+  if (typeof m === "string" || typeof m === "number") {
     m = new Date(m);
   }
 

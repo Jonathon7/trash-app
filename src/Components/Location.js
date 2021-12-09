@@ -134,7 +134,7 @@ export default function Location() {
           setAddID("");
           setAddAddress1("");
           setAddAddress2("");
-          setAddAccountType("");
+          setAddAccountType("PERM");
           setAddLocationFormError(false);
           getLocations().then((locations) => setLocations(locations));
         }
@@ -188,11 +188,11 @@ export default function Location() {
           setAddID={setAddID}
           addLocationFormError={addLocationFormError}
           addAddress1={addAddress1}
-          setAddress1={setAddress1}
+          setAddAddress1={setAddAddress1}
           addAddress2={addAddress2}
-          setAddAddress={setAddAddress2}
+          setAddAddress2={setAddAddress2}
           addAccountType={addAccountType}
-          setAccountType={setAccountType}
+          setAddAccountType={setAddAccountType}
           addLocation={addLocation}
           errorMessage={errorMessage}
         />

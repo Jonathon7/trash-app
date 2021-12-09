@@ -53,6 +53,7 @@ app.get("/api/container/", Container.getContainerIDs);
 app.get("/api/container/:ID", Container.getContainer);
 app.put("/api/container", Container.updateContainer);
 app.post("/api/container", Container.addContainer);
+app.put("/api/return-to-stock", Container.returnToStock);
 
 // Transaction Form
 app.get("/api/fees", Transaction.getFees);
@@ -68,6 +69,10 @@ app.get("/api/transaction-form-data", Transaction.getFormData);
 app.delete("/api/clear-form", Transaction.clearForm);
 app.put("/api/transactions", Transaction.updateTransaction);
 app.delete("/api/transactions/:ID", Transaction.deleteTransactions);
+app.get("/api/bill-fee-amounts", Transaction.getBillFeeAmounts);
+app.post("/api/service-charge", Transaction.addServiceCharge);
+app.post("/api/monthly-rent-charge", Transaction.addMonthlyRentCharge);
+app.put("/api/bill", Transaction.bill);
 
 const PORT = process.env.NODE_PORT;
 

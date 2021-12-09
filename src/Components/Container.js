@@ -186,7 +186,11 @@ export default function Container() {
       .catch((err) => console.log(err));
   }
 
-  function updateContainer(container) {
+  async function updateContainer(container) {
+    if (container.returnedToStockDate) {
+      await returnToStock(container);
+    }
+
     axios
       .put("/api/container", {
         ID: container.ID,
@@ -228,6 +232,15 @@ export default function Container() {
         toggleUpdateStatus();
       })
       .catch((err) => console.log(err));
+  }
+
+  function returnToStock(container) {
+    return new Promise((resolve, reject) => {
+      axios
+        .put("/api/return-to-stock", { container })
+        .catch((err) => reject(err));
+      resolve(true);
+    });
   }
 
   function updateStateValues(container) {

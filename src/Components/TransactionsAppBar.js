@@ -36,6 +36,13 @@ export default function TransactionsAppBar(props) {
             >
               SHOW FEES
             </Button>
+            <Button
+              variant="text"
+              sx={{ mr: 2 }}
+              onClick={props.toggleBillModal}
+            >
+              BILL
+            </Button>
             <Button variant="text" sx={{ mr: 2 }} onClick={props.clearForm}>
               CLEAR FORM
             </Button>

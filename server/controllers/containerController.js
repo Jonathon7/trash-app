@@ -120,6 +120,8 @@ const updateContainer = async (req, res) => {
     cityOwned = cityOwned === "YES" ? 1 : 0;
     inStock = inStock === "YES" ? 1 : 0;
 
+    returnedToStockDate && (locationID = 0), (customerID = 0);
+
     setDate = formatDate(setDate);
     returnedToStockDate = formatDate(returnedToStockDate);
 
@@ -302,9 +304,39 @@ const checkIfCustomerExists = (ID) =>
     });
   });
 
+const returnToStock = (req, res) => {
+  const { customerID, locationID, ID, returnedToStockDate } =
+    req.body.container;
+
+  openDbConnection().then((connection) => {
+    const request = new Request(
+      `INSERT INTO ${
+        process.env.transactionsTable
+      }(CustomerId, LocationId, ContainerId, ReturnedToStockDate, ServicedDate, FeeId, Name, Amount, TransactionDate) VALUES(${customerID}, ${locationID}, ${ID}, '${formatDate(
+        returnedToStockDate
+      )}', '${formatDate(
+        returnedToStockDate
+      )}', 38, 'RETURN TO STOCK', 0, '${formatDate(new Date())}')`,
+      (err) => {
+        if (err) {
+          throw err;
+        }
+        connection.close();
+      }
+    );
+
+    request.on("requestCompleted", function () {
+      res.sendStatus(200);
+    });
+
+    connection.execSql(request);
+  });
+};
+
 module.exports = {
   getContainer,
   getContainerIDs,
   updateContainer,
   addContainer,
+  returnToStock,
 };

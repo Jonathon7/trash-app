@@ -11,7 +11,7 @@ export default function Notification(props) {
         autoHideDuration={6000}
         onClose={props.toggleOpen}
       >
-        <Alert severity={props.severity}>{props.message}</Alert>
+        <Alert severity={props.severity || "info"}>{props.message}</Alert>
       </Snackbar>
     </React.Fragment>
   );
