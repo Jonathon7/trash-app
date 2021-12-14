@@ -24,8 +24,12 @@ export default function GetLocationForm(props) {
           size="small"
           disabled={props.update && true}
           value={props.address1 || null}
+          isOptionEqualToValue={(option, value) => {
+            return option.label === value;
+          }}
           onChange={(e, val) => {
-            props.setAddress1(val);
+            props.setID(val ? val.id : "");
+            props.setAddress1(val ? val.label : "");
             props.setResults([]);
           }}
           options={props.locations}
@@ -58,9 +62,12 @@ export default function GetLocationForm(props) {
 
       {props.update && (
         <UpdateLocationForm
+          ID={props.ID}
           address1={props.address1}
           address2={props.address2}
           accountType={props.accountType}
+          insideOutsideCityTax={props.insideOutsideCityTax}
+          ectorTax={props.ectorTax}
           toggleUpdateStatus={props.toggleUpdateStatus}
           updateLocation={props.updateLocation}
         />

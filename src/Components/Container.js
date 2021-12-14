@@ -41,8 +41,8 @@ export default function Container() {
   const [cityOwned, setCityOwned] = useState("");
   const [setDate, setSetDate] = useState("");
   const [inStock, setInStock] = useState(false);
-  const [locationID, setLocationID] = useState("");
-  const [customerID, setCustomerID] = useState("");
+  const [locationID, setLocationID] = useState(0);
+  const [customerID, setCustomerID] = useState(0);
   const [comments, setComments] = useState("");
   const [returnedToStockDate, setReturnedToStockDate] = useState(null);
   const [addID, setAddID] = useState("");
@@ -201,7 +201,7 @@ export default function Container() {
         setDate: container.setDate,
         returnedToStockDate: container.returnedToStockDate,
         locationID: container.locationID || 0,
-        customerID: container.customerID || 0,
+        customerID: parseInt(container.customerID, 10) || 0,
         comments: container.comments,
       })
       .then((res) => {

@@ -120,14 +120,17 @@ const updateContainer = async (req, res) => {
     cityOwned = cityOwned === "YES" ? 1 : 0;
     inStock = inStock === "YES" ? 1 : 0;
 
-    returnedToStockDate && (locationID = 0), (customerID = 0);
+    if (returnedToStockDate) {
+      locationID = 0;
+      customerID = 0;
+    }
 
     setDate = formatDate(setDate);
     returnedToStockDate = formatDate(returnedToStockDate);
 
-    const sql1 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate='${setDate}', Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
-    const sql2 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate='${returnedToStockDate}' WHERE containerId=${ID}`;
-    const sql3 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location='${locationID}', CustomerId='${customerID}', Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
+    const sql1 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate='${setDate}', Location=${locationID}, CustomerId=${customerID}, Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
+    const sql2 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location=${locationID}, CustomerId=${customerID}, Comment='${comments}', InStock=${inStock}, ReturnedToStockDate='${returnedToStockDate}' WHERE containerId=${ID}`;
+    const sql3 = `UPDATE ${process.env.containerTable} SET CubicYard ='${cubicYard}', Type ='${type}', CityOwned=${cityOwned}, SetDate=NULL, Location=${locationID}, CustomerId=${customerID}, Comment='${comments}', InStock=${inStock}, ReturnedToStockDate=NULL WHERE containerId=${ID}`;
 
     let sql;
 

@@ -225,8 +225,6 @@ const getTransactions = (req, res) => {
 
     sql += " ORDER BY ServicedDate";
 
-    console.log(sql);
-
     let results;
     const request = new Request(sql, (err) => {
       if (err) {
@@ -269,7 +267,6 @@ const clearForm = (req, res) => {
 };
 
 const updateTransaction = (req, res) => {
-  console.log(req.body);
   res.status(200).json("Transaction Updated");
 };
 
@@ -298,7 +295,7 @@ const getBillFeeAmounts = (req, res) => {
     let result;
 
     const request = new Request(
-      `SELECT FeeId, Name, Amount FROM ${process.env.feesTable} WHERE Name = 'SERVICE CHARGE' OR Name = 'DAILY RENT 30YD OT' OR Name = 'DAILY RENT 40YD OT' OR Name = 'MONTHLY RENT 30YD OT' OR Name = 'MONTHLY RENT 40YD OT' OR Name = 'DAILY RENT COMPACTOR';`,
+      `SELECT FeeId, Name, Amount FROM ${process.env.feesTable} WHERE Name IN('SERVICE CHARGE', 'DAILY RENT 30YD OT', 'DAILY RENT 40YD OT', 'MONTHLY RENT 30YD OT', 'MONTHLY RENT 40YD OT', 'DAILY RENT COMPACTOR') OR RateCode IN('TSI', 'TMI', 'TCI', 'TII', 'TSO', 'TMO', 'TCO', 'TIO');`,
       (err) => {
         if (err) {
           throw err;
@@ -383,6 +380,30 @@ const addMonthlyRentCharge = (req, res) => {
   });
 };
 
+const addTaxes = (req, res) => {
+  const { startDate, endDate, TSI, TMI, TCI, TII, TSO, TMO, TCO, TIO } =
+    req.body;
+
+  openDbConnection().then((connection) => {
+    const sql = `EXEC [TestTRASH].[dbo].[TaxesInsideOutsideCityLimits] @ServiceStartDate = '${formatDate(
+      startDate
+    )}', '${formatDate(
+      endDate
+    )}', ${TSI}, ${TMI}, ${TCI}, ${TII}, ${TSO}, ${TMO}, ${TCO}, ${TIO};`;
+
+    console.log(sql);
+
+    const request = new Request(sql, (err) => {
+      if (err) throw err;
+      connection.close();
+    });
+
+    request.on("requestCompleted", function () {
+      res.sendStatus(200);
+    });
+  });
+};
+
 const bill = (req, res) => {
   openDbConnection().then((connection) => {
     const { startDate, endDate } = req.body;
@@ -422,5 +443,6 @@ module.exports = {
   getBillFeeAmounts,
   addServiceCharge,
   addMonthlyRentCharge,
+  addTaxes,
   bill,
 };

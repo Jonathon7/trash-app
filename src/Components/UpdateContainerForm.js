@@ -21,8 +21,8 @@ export default function UpdateContainerForm(props) {
   const [cityOwned, setCityOwned] = useState("");
   const [setDate, setSetDate] = useState(null);
   const [inStock, setInStock] = useState("");
-  const [locationID, setLocationID] = useState("");
-  const [customerID, setCustomerID] = useState("");
+  const [locationID, setLocationID] = useState(0);
+  const [customerID, setCustomerID] = useState(0);
   const [comments, setComments] = useState("");
   const [returnedToStockDate, setReturnedToStockDate] = useState(null);
   const [open, setOpen] = useState(false);

@@ -4,6 +4,7 @@ import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import DateFilter from "./DateFilter";
+import Typography from "@mui/material/Typography";
 
 export default function BillModal(props) {
   const [startDate, setStartDate] = useState(null);
@@ -40,6 +41,14 @@ export default function BillModal(props) {
       {
         DAILY_RENT_COMPACTOR: fees.data[5][2].value, // 5
       },
+      { TSI: fees.data[6][2].value },
+      { TMI: fees.data[7][2].value },
+      { TCI: fees.data[8][2].value },
+      { TII: fees.data[9][2].value },
+      { TSO: fees.data[10][2].value },
+      { TMO: fees.data[11][2].value },
+      { TCO: fees.data[12][2].value },
+      { TIO: fees.data[13][2].value },
     ];
 
     // add service charge
@@ -66,6 +75,18 @@ export default function BillModal(props) {
     await axios.put("/api/bill", { startDate, endDate });
 
     //taxes
+    await axios.post("/api/taxes", {
+      startDate,
+      endDate,
+      TSI: feesData[6].TSI,
+      TMI: feesData[7].TMI,
+      TCI: feesData[8].TCI,
+      TII: feesData[9].TII,
+      TSO: feesData[10].TSO,
+      TMO: feesData[11].TMO,
+      TCO: feesData[12].TCO,
+      TIO: feesData[13].TIO,
+    });
   }
 
   return (
@@ -75,20 +96,38 @@ export default function BillModal(props) {
           width: "50%",
           height: "50%",
           bgcolor: "#fff",
-          margin: "auto",
+          m: "auto",
           mt: 10,
+          display: "flex",
+          alignItems: "start",
+          justifyContent: "center",
         }}
       >
-        <DateFilter
-          startDate={startDate}
-          endDate={endDate}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          dateFilterFormError={dateFilterFormError}
-        />
-        <Button variant="outlined" onClick={bill}>
-          BILL
-        </Button>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "fit-content",
+            pt: 5,
+          }}
+        >
+          <Typography variant="h6" component="h1" sx={{ alignSelf: "start" }}>
+            Bill Run
+          </Typography>
+          <DateFilter
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            dateFilterFormError={dateFilterFormError}
+          />
+
+          <Button variant="outlined" onClick={bill} sx={{ alignSelf: "start" }}>
+            BILL
+          </Button>
+        </Box>
       </Box>
     </Modal>
   );

@@ -28,7 +28,7 @@ const getLocation = (req, res) => {
   openDbConnection().then((connection) => {
     let result;
     const request = new Request(
-      `SELECT * FROM ${process.env.locationTable} WHERE address1 = '${req.params.address1}'`,
+      `SELECT * FROM ${process.env.locationTable} WHERE LocationId = ${req.params.ID}`,
       (err) => {
         if (err) {
           throw err;
@@ -47,18 +47,45 @@ const getLocation = (req, res) => {
   });
 };
 
-const updateLocation = (req, res) => {
+const updateLocation = async (req, res) => {
+  let locationExists;
+  if (req.body.ID !== req.body.newID)
+    locationExists = await checkForExistingLocation(req.body.newID);
+
   openDbConnection().then((connection) => {
     let result;
-    const request = new Request(
-      `UPDATE ${process.env.locationTable} SET Address1 = '${req.body.newAddress1}', Address2 = '${req.body.newAddress2}', AccountType = '${req.body.newAccountType}' WHERE LocationId = ${req.body.ID}; SELECT * FROM ${process.env.locationTable} WHERE LocationId = ${req.body.ID}`,
-      (err) => {
-        if (err) {
-          throw err;
-        }
-        connection.close();
+
+    let {
+      ID,
+      newID,
+      address1,
+      address2,
+      accountType,
+      insideOutsideCityTax,
+      ectorTax,
+    } = req.body;
+
+    let sql = `UPDATE ${process.env.locationTable} SET Address1 = '${address1}', Address2 = '${address2}', AccountType = '${accountType}', InsideOutsideCityTax = '${insideOutsideCityTax}', EctorTax = '${ectorTax}' WHERE LocationId = ${ID}; SELECT * FROM ${process.env.locationTable} WHERE LocationId = ${ID};`;
+
+    if (ID !== newID) {
+      if (locationExists)
+        return res
+          .status(200)
+          .json("Location already exists: ID already in use.");
+
+      sql = `INSERT INTO ${process.env.locationTable} (LocationId, Address1, Address2, AccountType, InsideOutsideCityTax, EctorTax) VALUES(${newID}, '${address1}', '${address2}', '${accountType}', '${insideOutsideCityTax}', '${ectorTax}');
+       UPDATE ${process.env.containerTable} SET Location = ${newID} WHERE Location = ${ID};
+        UPDATE ${process.env.transactionsTable} SET LocationId = ${newID} WHERE LocationId = ${ID};
+         DELETE FROM ${process.env.locationTable} WHERE LocationId = ${ID};
+          SELECT * FROM ${process.env.locationTable} WHERE LocationId = ${newID};`;
+    }
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
       }
-    );
+      connection.close();
+    });
 
     request.on("doneInProc", (rowCount, more, rows) => {
       if (rows[0]) {
@@ -77,12 +104,21 @@ const updateLocation = (req, res) => {
 const addLocation = async (req, res) => {
   const exists = await checkForExistingLocation(req.body.ID);
 
+  const {
+    ID,
+    address1,
+    address2,
+    accountType,
+    insideOutsideCityTax,
+    ectorTax,
+  } = req.body;
+
   if (exists)
     return res.status(200).json("Location already exists: ID already in use.");
 
   openDbConnection().then((connection) => {
     const request = new Request(
-      `INSERT INTO ${process.env.locationTable}(LocationId, AccountType, Address1, Address2) VALUES('${req.body.ID}', '${req.body.accountType}', '${req.body.address1}', '${req.body.address2}');`,
+      `INSERT INTO ${process.env.locationTable}(LocationId, AccountType, Address1, Address2, InsideOutsideCityTax, EctorTax) VALUES('${ID}', '${accountType}', '${address1}', '${address2}', '${insideOutsideCityTax}', '${ectorTax}');`,
       (err) => {
         if (err) {
           throw err;

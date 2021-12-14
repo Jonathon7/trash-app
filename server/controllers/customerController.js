@@ -31,20 +31,25 @@ const getCustomers = async (req, res) => {
 
 const getCustomer = (req, res) => {
   openDbConnection().then((connection) => {
-    let result;
+    let result = [];
 
     const request = new Request(
-      `SELECT * FROM ${process.env.customerTable} WHERE CustomerId = ${req.params.ID}`,
+      `SELECT * FROM ${process.env.customerTable} WHERE CustomerId = ${req.params.ID}; SELECT ContainerId, Location FROM ${process.env.containerTable} WHERE CustomerId = ${req.params.ID};`,
       (err) => {
         if (err) {
           throw err;
         }
+
         connection.close();
       }
     );
+
     request.on("doneInProc", (rowCount, more, rows) => {
-      result = rows;
+      for (let i = 0; i < rows.length; i++) {
+        result.push(rows[i]);
+      }
     });
+
     request.on("requestCompleted", function () {
       res.status(200).json(result);
     });
@@ -62,8 +67,16 @@ const addCustomer = async (req, res) => {
   openDbConnection().then((connection) => {
     let result;
 
+    let { id, name, taxExempt } = req.body;
+
+    if (taxExempt) {
+      taxExempt = 1;
+    } else {
+      taxExempt = 0;
+    }
+
     const request = new Request(
-      `INSERT INTO ${process.env.customerTable}(CustomerId, Name) VALUES(${req.body.id}, '${req.body.name}'); SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.id};`,
+      `INSERT INTO ${process.env.customerTable}(CustomerId, Name, TaxExempt) VALUES(${id}, '${name}', ${taxExempt}); SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${id};`,
       (err) => {
         if (err) {
           throw err;
@@ -90,8 +103,16 @@ const updateCustomer = (req, res) => {
   openDbConnection().then((connection) => {
     let result;
 
+    let { name, taxExempt } = req.body;
+
+    if (taxExempt === "YES") {
+      taxExempt = 1;
+    } else {
+      taxExempt = 0;
+    }
+
     const request = new Request(
-      `UPDATE ${process.env.customerTable} SET Name='${req.body.newName}' WHERE CustomerId =${req.body.id}; SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.id}`,
+      `UPDATE ${process.env.customerTable} SET Name='${name}', TaxExempt=${taxExempt} WHERE CustomerId =${req.body.id}; SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.id}`,
       (err) => {
         if (err) {
           throw err;

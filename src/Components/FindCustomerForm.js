@@ -53,7 +53,13 @@ export default function FindCustomerForm(props) {
         Search
       </Button>
       {props.results.length ? (
-        <Card title="Customer" data={props.results} />
+        <Card
+          title="Customer"
+          data={props.results}
+          info={props.info}
+          showInfo={props.showInfo}
+          toggleShowInfo={props.toggleShowInfo}
+        />
       ) : null}
       {props.results.length ? (
         <Button variant="outlined" onClick={props.toggleUpdateStatus}>
@@ -63,7 +69,8 @@ export default function FindCustomerForm(props) {
       {props.update && (
         <UpdateCustomerForm
           name={props.customerName}
-          updateCustomerName={props.updateCustomerName}
+          taxExempt={props.taxExempt}
+          updateCustomer={props.updateCustomer}
           toggleUpdateStatus={props.toggleUpdateStatus}
         />
       )}

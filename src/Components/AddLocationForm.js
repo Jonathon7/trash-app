@@ -67,6 +67,46 @@ export default function AddLocationForm(props) {
         </Select>
       </FormControl>
 
+      <FormControl margin="normal">
+        <InputLabel id="Inside Outside City Tax">
+          Inside Outside City Tax
+        </InputLabel>
+        <Select
+          labelId="Inside Outside City Tax"
+          label="Inside Outside City Tax"
+          variant="outlined"
+          size="small"
+          value={props.addInsideOutsideCityTax}
+          onChange={(e) => props.setAddInsideOutsideCityTax(e.target.value)}
+        >
+          <MenuItem value={"TSI"}>TSI</MenuItem>
+          <MenuItem value={"TMI"}>TMI</MenuItem>
+          <MenuItem value={"TCI"}>TCI</MenuItem>
+          <MenuItem value={"TII"}>TII</MenuItem>
+          <MenuItem value={"TSO"}>TSO</MenuItem>
+          <MenuItem value={"TMO"}>TMO</MenuItem>
+          <MenuItem value={"TCO"}>TCO</MenuItem>
+          <MenuItem value={"TIO"}>TIO</MenuItem>
+          <MenuItem value={"VACANT"}>VACANT</MenuItem>
+        </Select>
+      </FormControl>
+
+      <FormControl margin="normal">
+        <InputLabel id="Ector Tax">Ector Tax</InputLabel>
+        <Select
+          labelId="Ector Tax"
+          label="Ector Tax"
+          variant="outlined"
+          size="small"
+          value={props.addEctorTax}
+          onChange={(e) => props.setAddEctorTax(e.target.value)}
+        >
+          <MenuItem value={"EC"}>EC</MenuItem>
+          <MenuItem value={"NO"}>NO</MenuItem>
+          <MenuItem value={"VACANT"}>VACANT</MenuItem>
+        </Select>
+      </FormControl>
+
       <Button variant="outlined" onClick={props.addLocation}>
         Submit
       </Button>

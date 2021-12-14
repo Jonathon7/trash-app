@@ -35,16 +35,25 @@ app.use(
     }),
   })
 );
+app.get("/api/active-page", (req, res) => {
+  req.session.activePage
+    ? res.status(200).json(req.session.activePage)
+    : res.sendStatus(404);
+});
+app.post("/api/active-page/:activePage", (req, res) => {
+  req.session.activePage = req.params.activePage;
+  res.sendStatus(200);
+});
 
 // Customer Form
 app.get("/api/get-customers", Customer.getCustomers);
 app.get("/api/get-customer/:ID", Customer.getCustomer);
 app.post("/api/add-customer", Customer.addCustomer);
-app.put("/api/update-name", Customer.updateCustomer);
+app.put("/api/update-customer", Customer.updateCustomer);
 
 // Location Form
 app.get("/api/get-locations", Location.getLocations);
-app.get("/api/get-location/:address1", Location.getLocation);
+app.get("/api/get-location/:ID", Location.getLocation);
 app.put("/api/update-location", Location.updateLocation);
 app.post("/api/add-location", Location.addLocation);
 
@@ -72,6 +81,7 @@ app.delete("/api/transactions/:ID", Transaction.deleteTransactions);
 app.get("/api/bill-fee-amounts", Transaction.getBillFeeAmounts);
 app.post("/api/service-charge", Transaction.addServiceCharge);
 app.post("/api/monthly-rent-charge", Transaction.addMonthlyRentCharge);
+app.post("/api/taxes", Transaction.addTaxes);
 app.put("/api/bill", Transaction.bill);
 
 const PORT = process.env.NODE_PORT;

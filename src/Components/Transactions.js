@@ -383,8 +383,8 @@ export default function Transactions() {
 
     if (
       !containerID ||
-      !customerID === "" ||
-      !locationID === "" ||
+      customerID === "" ||
+      locationID === "" ||
       !addedFees.length ||
       !servicedDate
     ) {
@@ -582,14 +582,14 @@ export default function Transactions() {
       <Grid container direction="row" justifyContent="space-evenly">
         <Grid container direction="column" sx={{ width: "40%" }}>
           <Typography component="h1" variant="h5">
-            Create Transaction
+            Transaction
           </Typography>
 
           <Tooltip
             arrow
             title="Container does not exist"
             placement="top-end"
-            open={infoMessage && !customerName}
+            open={infoMessage && !customerName && containerID}
           >
             <FormControl margin="normal">
               <TextField
@@ -722,7 +722,12 @@ export default function Transactions() {
                 if (
                   option.label === "TNRCC FEE CHARGE" ||
                   option.label === "LANDFILL TONNAGE" ||
-                  option.label === "PULL FEE"
+                  option.label === "PULL FEE" ||
+                  option.label === "RETURN TO STOCK" ||
+                  option.label === "SERVICE CHARGE" ||
+                  option.label === "ECTOR COUNTY ASSISTANCE DISTRI" ||
+                  option.label.includes("RENT") ||
+                  option.label.includes("TAX")
                 )
                   return;
                 return (

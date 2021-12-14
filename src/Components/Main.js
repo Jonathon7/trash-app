@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Divider from "@mui/material/Divider";
@@ -7,13 +7,26 @@ import Customer from "./Customer";
 import Location from "./Location";
 import Container from "./Container";
 import Transactions from "./Transactions";
-import { Typography } from "@mui/material";
+import Typography from "@mui/material/Typography";
+import axios from "axios";
 
 export default function Main() {
-  const [componentName, setComponent] = useState("Transactions");
+  const [componentName, setComponent] = useState(null);
   let component = null;
 
+  useEffect(() => {
+    axios
+      .get("/api/active-page")
+      .then((res) => {
+        setComponent(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
   function toggleComponent(selectedComponent) {
+    axios.post(`/api/active-page/${selectedComponent}`);
     setComponent(selectedComponent);
   }
 
@@ -31,7 +44,7 @@ export default function Main() {
       component = <Transactions />;
       break;
     default:
-      component = <Customer />;
+      component = <div></div>;
   }
 
   return (

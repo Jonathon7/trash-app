@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -9,20 +12,14 @@ import CloseIcon from "@mui/icons-material/Close";
 
 export default function UpdateCustomerForm(props) {
   const [updateName, setUpdateName] = useState("");
-  const [error, setError] = useState(false);
+  const [updateTaxExempt, setUpdateTaxExempt] = useState("NO");
+
+  useEffect(() => {
+    setUpdateTaxExempt(props.taxExempt);
+  }, [props.taxExempt]);
 
   function handleClick() {
-    if (!validate()) return;
-    props.updateCustomerName(updateName);
-  }
-
-  function validate() {
-    if (!updateName) {
-      setError(true);
-      return false;
-    } else {
-      return true;
-    }
+    props.updateCustomer(updateName ? updateName : props.name, updateTaxExempt);
   }
 
   return (
@@ -41,10 +38,23 @@ export default function UpdateCustomerForm(props) {
           label="Enter New Customer Name"
           variant="outlined"
           size="small"
-          error={error && !updateName && true}
           defaultValue={props.name}
           onChange={(e) => setUpdateName(e.target.value)}
         ></TextField>
+      </FormControl>
+      <FormControl margin="normal">
+        <InputLabel id="tax-exempt">Tax Exempt</InputLabel>
+        <Select
+          labelId="tax-exempt"
+          label="tax-exempt"
+          variant="outlined"
+          size="small"
+          value={updateTaxExempt}
+          onChange={(e) => setUpdateTaxExempt(e.target.value)}
+        >
+          <MenuItem value={"YES"}>YES</MenuItem>
+          <MenuItem value={"NO"}>NO</MenuItem>
+        </Select>
       </FormControl>
       <Button variant="outlined" onClick={handleClick}>
         Update Customer
