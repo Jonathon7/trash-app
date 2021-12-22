@@ -103,15 +103,17 @@ export default function Customer() {
       .catch((err) => console.log(err));
   }
 
-  function updateCustomer(newName, newTaxExempt) {
+  function updateCustomer(newID, newName, newTaxExempt) {
     axios
       .put("/api/update-customer", {
+        ID: customerID,
+        newID,
         name: newName,
         taxExempt: newTaxExempt,
-        id: results[0].ID,
       })
       .then((res) => {
         updateMUIOptions(customerName, res.data[1].value);
+        setCustomerID(res.data[0].value);
         setTaxExempt(res.data[2].value ? "YES" : "NO");
         toggleOpen();
         setMessage("Customer Info Updated");
@@ -185,6 +187,7 @@ export default function Customer() {
       <Notification open={open} message={message} toggleOpen={toggleOpen} />
       <Grid container direction="row" justifyContent="space-evenly">
         <FindCustomerForm
+          customerID={customerID}
           customerName={customerName}
           taxExempt={taxExempt}
           update={update}

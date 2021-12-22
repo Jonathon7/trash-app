@@ -247,6 +247,32 @@ const getTransactions = (req, res) => {
   });
 };
 
+const getTopTransactions = (req, res) => {
+  openDbConnection().then((connection) => {
+    let results;
+
+    const sql = `SELECT TOP 100 * FROM ${process.env.transactionsTable} ORDER BY TransactionId DESC;`;
+
+    const request = new Request(sql, (err) => {
+      if (err) throw err;
+
+      connection.close();
+    });
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows) {
+        results = rows;
+      }
+    });
+
+    request.on("requestCompleted", () => {
+      res.status(200).json(results);
+    });
+
+    connection.execSql(request);
+  });
+};
+
 const getFormData = (req, res) => {
   res.status(200).json(req.session.transaction);
 };
@@ -295,7 +321,7 @@ const getBillFeeAmounts = (req, res) => {
     let result;
 
     const request = new Request(
-      `SELECT FeeId, Name, Amount FROM ${process.env.feesTable} WHERE Name IN('SERVICE CHARGE', 'DAILY RENT 30YD OT', 'DAILY RENT 40YD OT', 'MONTHLY RENT 30YD OT', 'MONTHLY RENT 40YD OT', 'DAILY RENT COMPACTOR') OR RateCode IN('TSI', 'TMI', 'TCI', 'TII', 'TSO', 'TMO', 'TCO', 'TIO');`,
+      `SELECT FeeId, Name, Amount FROM ${process.env.feesTable} WHERE Name IN('SERVICE CHARGE', 'DAILY RENT 30YD OT', 'DAILY RENT 40YD OT', 'MONTHLY RENT 30YD OT', 'MONTHLY RENT 40YD OT', 'DAILY RENT COMPACTOR') OR RateCode IN('TSI', 'TMI', 'TCI', 'TII', 'TSO', 'TMO', 'TCO', 'TIO', 'EC');`,
       (err) => {
         if (err) {
           throw err;
@@ -322,7 +348,9 @@ const addServiceCharge = (req, res) => {
   openDbConnection().then((connection) => {
     const { startDate, endDate, feeID, Name, Amount } = req.body;
 
-    const sql = `EXEC [TestTrash].[dbo].[MonthlyServiceCharge] @ServiceStartDate = '${formatDate(
+    const sql = `EXEC ${
+      process.env.SP_MonthlyServiceCharge
+    } @ServiceStartDate = '${formatDate(
       startOfDay(startDate)
     )}', @ServiceEndDate = '${formatDate(
       endOfDay(endDate)
@@ -355,7 +383,9 @@ const addMonthlyRentCharge = (req, res) => {
       DAILY_RENT_COMPACTOR,
     } = req.body;
 
-    const sql = `EXEC [TestTrash].[dbo].[MonthlyRentFee] @ServiceStartDate = '${formatDate(
+    const sql = `EXEC ${
+      process.env.SP_MonthlyRentFee
+    } @ServiceStartDate = '${formatDate(
       startOfDay(startDate)
     )}', @ServiceEndDate = '${formatDate(
       endOfDay(endDate)
@@ -381,17 +411,21 @@ const addMonthlyRentCharge = (req, res) => {
 };
 
 const addTaxes = (req, res) => {
-  const { startDate, endDate, TSI, TMI, TCI, TII, TSO, TMO, TCO, TIO } =
+  const { startDate, endDate, TSI, TMI, TCI, TII, TSO, TMO, TCO, TIO, EC } =
     req.body;
 
   openDbConnection().then((connection) => {
-    const sql = `EXEC [TestTRASH].[dbo].[TaxesInsideOutsideCityLimits] @ServiceStartDate = '${formatDate(
+    const sql = `EXEC ${
+      process.env.SP_TaxesInsideOutsideCityLimits
+    } @ServiceStartDate = '${formatDate(
       startDate
-    )}', '${formatDate(
+    )}', @ServiceEndDate = '${formatDate(
       endDate
-    )}', ${TSI}, ${TMI}, ${TCI}, ${TII}, ${TSO}, ${TMO}, ${TCO}, ${TIO};`;
-
-    console.log(sql);
+    )}', @TSI = ${TSI}, @TIM = ${TMI}, @TCI = ${TCI}, @TII = ${TII}, @TSO = ${TSO}, @TMO = ${TMO}, @TCO = ${TCO}, @TIO = ${TIO}; EXEC ${
+      process.env.SP_TaxesEctor
+    } @ServiceStartDate = '${formatDate(
+      startDate
+    )}', @ServiceEndDate = '${formatDate(endDate)}', @EC = ${EC};`;
 
     const request = new Request(sql, (err) => {
       if (err) throw err;
@@ -434,6 +468,7 @@ module.exports = {
   createTransaction,
   addFee,
   updateFee,
+  getTopTransactions,
   getTransactions,
   getFormData,
   saveFormData,

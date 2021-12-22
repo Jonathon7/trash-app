@@ -125,6 +125,9 @@ export default function TransactionsModal(props) {
     getContainers().then((containers) => {
       return isSubscribed ? setContainers(containers || []) : null;
     });
+    getTopTransactions().then((transactions) => {
+      return isSubscribed ? setTransactions(transactions) : null;
+    });
     return () => (isSubscribed = false);
   }, []);
 
@@ -146,6 +149,13 @@ export default function TransactionsModal(props) {
     return axios
       .get("/api/container/")
       .then((res) => createContainersArray(res.data))
+      .catch((err) => console.log(err));
+  }
+
+  async function getTopTransactions() {
+    return axios
+      .get("/api/top-transactions")
+      .then((res) => createTransactionsArray(res.data))
       .catch((err) => console.log(err));
   }
 

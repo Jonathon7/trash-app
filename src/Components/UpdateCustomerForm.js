@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function UpdateCustomerForm(props) {
+  const [updateID, setUpdateID] = useState(null);
   const [updateName, setUpdateName] = useState("");
   const [updateTaxExempt, setUpdateTaxExempt] = useState("NO");
 
@@ -19,7 +20,11 @@ export default function UpdateCustomerForm(props) {
   }, [props.taxExempt]);
 
   function handleClick() {
-    props.updateCustomer(updateName ? updateName : props.name, updateTaxExempt);
+    props.updateCustomer(
+      updateID ? updateID : props.ID,
+      updateName ? updateName : props.name,
+      updateTaxExempt
+    );
   }
 
   return (
@@ -32,6 +37,16 @@ export default function UpdateCustomerForm(props) {
           <CloseIcon />
         </IconButton>
       </Grid>
+      <FormControl margin="normal">
+        <TextField
+          required
+          label="Enter New Customer ID"
+          variant="outlined"
+          size="small"
+          defaultValue={props.ID}
+          onChange={(e) => setUpdateID(e.target.value)}
+        ></TextField>
+      </FormControl>
       <FormControl margin="normal">
         <TextField
           required

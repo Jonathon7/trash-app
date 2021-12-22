@@ -200,7 +200,12 @@ export default function Location() {
   return (
     <React.Fragment>
       <Notification open={open} message={message} toggleOpen={toggleOpen} />
-      <Grid container direction="row" justifyContent="space-evenly">
+      <Grid
+        container
+        direction="row"
+        justifyContent="space-evenly"
+        sx={{ mb: 10 }}
+      >
         <GetLocationForm
           ID={ID}
           address1={address1}

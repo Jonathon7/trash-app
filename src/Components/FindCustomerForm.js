@@ -68,6 +68,7 @@ export default function FindCustomerForm(props) {
       ) : null}
       {props.update && (
         <UpdateCustomerForm
+          ID={props.customerID}
           name={props.customerName}
           taxExempt={props.taxExempt}
           updateCustomer={props.updateCustomer}

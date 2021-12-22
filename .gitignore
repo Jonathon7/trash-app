@@ -25,5 +25,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-testing.sql
-testing2.sql
+test.sql

@@ -308,25 +308,23 @@ const checkIfCustomerExists = (ID) =>
   });
 
 const returnToStock = (req, res) => {
-  const { customerID, locationID, ID, returnedToStockDate } =
-    req.body.container;
+  const { ID, returnedToStockDate } = req.body.container;
 
   openDbConnection().then((connection) => {
-    const request = new Request(
-      `INSERT INTO ${
-        process.env.transactionsTable
-      }(CustomerId, LocationId, ContainerId, ReturnedToStockDate, ServicedDate, FeeId, Name, Amount, TransactionDate) VALUES(${customerID}, ${locationID}, ${ID}, '${formatDate(
-        returnedToStockDate
-      )}', '${formatDate(
-        returnedToStockDate
-      )}', 38, 'RETURN TO STOCK', 0, '${formatDate(new Date())}')`,
-      (err) => {
-        if (err) {
-          throw err;
-        }
-        connection.close();
+    const sql = `INSERT INTO ${
+      process.env.transactionsTable
+    }(CustomerId, LocationId, ContainerId, ReturnedToStockDate, ServicedDate, FeeId, Name, Amount, TransactionDate) VALUES(0, 0, ${ID}, '${formatDate(
+      returnedToStockDate
+    )}', '${formatDate(
+      returnedToStockDate
+    )}', 42, 'RETURN TO STOCK', 0, '${formatDate(new Date())}')`;
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
       }
-    );
+      connection.close();
+    });
 
     request.on("requestCompleted", function () {
       res.sendStatus(200);

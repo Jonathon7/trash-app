@@ -66,6 +66,7 @@ app.put("/api/return-to-stock", Container.returnToStock);
 
 // Transaction Form
 app.get("/api/fees", Transaction.getFees);
+app.get("/api/top-transactions", Transaction.getTopTransactions);
 app.get(
   "/api/transactions/:customerID/:locationID/:containerID/:startDate/:endDate/:showOnlyUnprocessedTransactions",
   Transaction.getTransactions

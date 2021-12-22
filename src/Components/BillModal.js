@@ -19,7 +19,7 @@ export default function BillModal(props) {
 
     // get fee amounts
     const fees = await axios.get("/api/bill-fee-amounts");
-    // add service charge
+
     const feesData = [
       {
         SERVICE_CHARGE_FEE_ID: fees.data[0][0].value,
@@ -49,6 +49,7 @@ export default function BillModal(props) {
       { TMO: fees.data[11][2].value },
       { TCO: fees.data[12][2].value },
       { TIO: fees.data[13][2].value },
+      { EC: fees.data[14][2].value },
     ];
 
     // add service charge
@@ -86,6 +87,7 @@ export default function BillModal(props) {
       TMO: feesData[11].TMO,
       TCO: feesData[12].TCO,
       TIO: feesData[13].TIO,
+      EC: feesData[14].EC,
     });
   }
 

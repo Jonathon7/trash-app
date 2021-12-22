@@ -99,11 +99,14 @@ const addCustomer = async (req, res) => {
   });
 };
 
-const updateCustomer = (req, res) => {
+const updateCustomer = async (req, res) => {
+  const customerExists = await checkForExistingCustomer(req.body.newID);
   openDbConnection().then((connection) => {
     let result;
 
-    let { name, taxExempt } = req.body;
+    let { ID, newID, name, taxExempt } = req.body;
+
+    newID = parseInt(newID, 10);
 
     if (taxExempt === "YES") {
       taxExempt = 1;
@@ -111,15 +114,27 @@ const updateCustomer = (req, res) => {
       taxExempt = 0;
     }
 
-    const request = new Request(
-      `UPDATE ${process.env.customerTable} SET Name='${name}', TaxExempt=${taxExempt} WHERE CustomerId =${req.body.id}; SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.id}`,
-      (err) => {
-        if (err) {
-          throw err;
-        }
-        connection.close();
+    let sql = `UPDATE ${process.env.customerTable} SET Name='${name}', TaxExempt=${taxExempt} WHERE CustomerId = ${req.body.ID}; SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.ID};`;
+
+    if (ID !== newID) {
+      if (customerExists)
+        return res
+          .status(200)
+          .json("Customer already exists: ID already in use.");
+
+      sql = `INSERT INTO ${process.env.customerTable} (CustomerId, Name, TaxExempt) VALUES(${newID}, '${name}', ${taxExempt});
+             UPDATE ${process.env.containerTable} SET CustomerId = ${newID} WHERE CustomerId = ${ID};
+             UPDATE ${process.env.transactionsTable} SET CustomerId = ${newID} WHERE CustomerId = ${ID};
+             DELETE FROM ${process.env.customerTable} WHERE CustomerId = ${ID};
+             SELECT * FROM ${process.env.customerTable} WHERE CustomerId=${req.body.newID};`;
+    }
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
       }
-    );
+      connection.close();
+    });
 
     request.on("doneInProc", (rowCount, more, rows) => {
       if (rows[0]) {
