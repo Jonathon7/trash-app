@@ -50,6 +50,7 @@ app.get("/api/get-customers", Customer.getCustomers);
 app.get("/api/get-customer/:ID", Customer.getCustomer);
 app.post("/api/add-customer", Customer.addCustomer);
 app.put("/api/update-customer", Customer.updateCustomer);
+app.get("/api/customer-info/:customerID/:locationID", Customer.getCustomerInfo);
 
 // Location Form
 app.get("/api/get-locations", Location.getLocations);
@@ -84,6 +85,15 @@ app.post("/api/service-charge", Transaction.addServiceCharge);
 app.post("/api/monthly-rent-charge", Transaction.addMonthlyRentCharge);
 app.post("/api/taxes", Transaction.addTaxes);
 app.put("/api/bill", Transaction.bill);
+app.get(
+  "/api/bill-breakdown/:startDate/:endDate/:ID",
+  Transaction.getCustomerBillBreakdown
+);
+app.post(
+  "/api/breakdown-view/:startDate/:endDate/:customerSelection",
+  Transaction.getBreakdown
+);
+app.get("/api/import-to-munis/:startDate/:endDate", Transaction.importToMunis);
 
 const PORT = process.env.NODE_PORT;
 

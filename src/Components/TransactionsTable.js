@@ -9,6 +9,8 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import randomMC from "random-material-color";
 import TablePagination from "@mui/material/TablePagination";
+import IconButton from "@mui/material/IconButton";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const useStyles = makeStyles({
   tr: {
@@ -119,6 +121,17 @@ export default function TransactionsTable(props) {
                     <TableCell size="small">{row[10].value}</TableCell>
                     <TableCell size="small">{row[11].value}</TableCell>
                     <TableCell size="small">{row[12].value}</TableCell>
+                    <TableCell size="small">
+                      {props.download ? (
+                        <IconButton
+                          onClick={() =>
+                            props.getCustomerBillBreakdown(row[1].value)
+                          }
+                        >
+                          <DownloadIcon />
+                        </IconButton>
+                      ) : null}
+                    </TableCell>
                   </TableRow>
                 );
               })}

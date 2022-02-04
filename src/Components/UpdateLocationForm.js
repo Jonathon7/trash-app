@@ -145,7 +145,6 @@ export default function UpdateLocationForm(props) {
           <MenuItem value={"TMO"}>TMO</MenuItem>
           <MenuItem value={"TCO"}>TCO</MenuItem>
           <MenuItem value={"TIO"}>TIO</MenuItem>
-          <MenuItem value={"VACANT"}>VACANT</MenuItem>
         </Select>
       </FormControl>
 
@@ -162,7 +161,6 @@ export default function UpdateLocationForm(props) {
         >
           <MenuItem value={"EC"}>EC</MenuItem>
           <MenuItem value={"NO"}>NO</MenuItem>
-          <MenuItem value={"VACANT"}>VACANT</MenuItem>
         </Select>
       </FormControl>
 

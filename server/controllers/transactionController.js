@@ -1,6 +1,7 @@
 let Request = require("tedious").Request;
 let { openDbConnection } = require("../database");
 const { formatDate } = require("../utils/formatDate");
+const { formatDate2 } = require("../utils/formatDate2");
 const startOfDay = require("../utils/startOfDay");
 const endOfDay = require("../utils/endOfDay");
 
@@ -82,7 +83,7 @@ const addFee = (req, res) => {
     } else {
       openDbConnection().then((connection) => {
         const request = new Request(
-          `INSERT INTO ${process.env.feesTable}(Name, Amount) values('${req.body.name}', ${req.body.amount});`,
+          `INSERT INTO ${process.env.feesTable}(Name, Amount, ChargeCode, RateCode) values('${req.body.name}', ${req.body.amount}, '${req.body.chargeCode}', '${req.body.rateCode}');`,
           (err) => {
             if (err) {
               throw err;
@@ -104,7 +105,7 @@ const addFee = (req, res) => {
 const updateFee = (req, res) => {
   openDbConnection().then((connection) => {
     const request = new Request(
-      `UPDATE ${process.env.feesTable} SET Amount = ${req.body.feeAmount} WHERE FeeId = ${req.body.id}`,
+      `UPDATE ${process.env.feesTable} SET Amount = ${req.body.feeAmount}, ChargeCode = '${req.body.chargeCode}', RateCode = '${req.body.rateCode}' WHERE FeeId = ${req.body.id}`,
       (err) => {
         if (err) {
           throw err;
@@ -350,9 +351,9 @@ const addServiceCharge = (req, res) => {
 
     const sql = `EXEC ${
       process.env.SP_MonthlyServiceCharge
-    } @ServiceStartDate = '${formatDate(
-      startOfDay(startDate)
-    )}', @ServiceEndDate = '${formatDate(
+    } @ServiceStartDate = '${formatDate2(
+      startDate
+    )}', @ServiceEndDate = '${formatDate2(
       endOfDay(endDate)
     )}', @FeeId = ${feeID}, @Name = '${Name}', @Amount = ${Amount}, @TransactionProcessed = 1;`;
 
@@ -384,10 +385,21 @@ const addMonthlyRentCharge = (req, res) => {
     } = req.body;
 
     const sql = `EXEC ${
-      process.env.SP_MonthlyRentFee
-    } @ServiceStartDate = '${formatDate(
-      startOfDay(startDate)
-    )}', @ServiceEndDate = '${formatDate(
+      process.env.SP_MonthlyRentFeeCurrentSet
+    } @ServiceStartDate = '${formatDate2(
+      startDate
+    )}', @ServiceEndDate = '${formatDate2(
+      endOfDay(endDate)
+    )}', @DAILYRENT30YDOT = '${DAILY_RENT_30YD_OT}'
+    ,@DAILYRENT40YDOT = '${DAILY_RENT_40YD_OT}'
+    ,@MONTHLYRENT30YDOT = '${MONTHLY_RENT_30YD_OT}'
+    ,@MONTHLYRENT40YDOT = '${MONTHLY_RENT_40YD_OT}'
+    ,@DAILYRENTCOMPACTOR = '${DAILY_RENT_COMPACTOR}', @TransactionProcessed = 1;
+    EXEC ${
+      process.env.SP_MonthlyRentFeeReturnedToStock
+    } @ServiceStartDate = '${formatDate2(
+      startDate
+    )}', @ServiceEndDate = '${formatDate2(
       endOfDay(endDate)
     )}', @DAILYRENT30YDOT = '${DAILY_RENT_30YD_OT}'
     ,@DAILYRENT40YDOT = '${DAILY_RENT_40YD_OT}'
@@ -417,15 +429,15 @@ const addTaxes = (req, res) => {
   openDbConnection().then((connection) => {
     const sql = `EXEC ${
       process.env.SP_TaxesInsideOutsideCityLimits
-    } @ServiceStartDate = '${formatDate(
+    } @ServiceStartDate = '${formatDate2(
       startDate
-    )}', @ServiceEndDate = '${formatDate(
-      endDate
-    )}', @TSI = ${TSI}, @TIM = ${TMI}, @TCI = ${TCI}, @TII = ${TII}, @TSO = ${TSO}, @TMO = ${TMO}, @TCO = ${TCO}, @TIO = ${TIO}; EXEC ${
+    )}', @ServiceEndDate = '${formatDate2(
+      endOfDay(endDate)
+    )}', @TSI = ${TSI}, @TMI = ${TMI}, @TCI = ${TCI}, @TII = ${TII}, @TSO = ${TSO}, @TMO = ${TMO}, @TCO = ${TCO}, @TIO = ${TIO}; EXEC ${
       process.env.SP_TaxesEctor
-    } @ServiceStartDate = '${formatDate(
+    } @ServiceStartDate = '${formatDate2(
       startDate
-    )}', @ServiceEndDate = '${formatDate(endDate)}', @EC = ${EC};`;
+    )}', @ServiceEndDate = '${formatDate2(endOfDay(endDate))}', @EC = ${EC};`;
 
     const request = new Request(sql, (err) => {
       if (err) throw err;
@@ -435,6 +447,8 @@ const addTaxes = (req, res) => {
     request.on("requestCompleted", function () {
       res.sendStatus(200);
     });
+
+    connection.execSql(request);
   });
 };
 
@@ -463,6 +477,118 @@ const bill = (req, res) => {
   });
 };
 
+const getCustomerBillBreakdown = (req, res) => {
+  openDbConnection().then((connection) => {
+    const { startDate, endDate, ID } = req.params;
+    let results;
+
+    const sql = `EXEC ${
+      process.env.SP_CustomerExport
+    } @ServiceStartDate = '${formatDate(
+      startDate
+    )}', @ServiceEndDate = '${formatDate(
+      endOfDay(endDate)
+    )}', @CustomerId = ${ID}`;
+
+    const request = new Request(sql, (err) => {
+      if (err) throw err;
+
+      connection.close();
+    });
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows[0]) {
+        results = rows;
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      res.status(200).json(results);
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const importToMunis = (req, res) => {
+  openDbConnection().then((connection) => {
+    const { startDate, endDate } = req.params;
+    let results;
+
+    const sql = `EXEC ${
+      process.env.SP_ImportToMunis
+    } @ServiceStartDate = '${formatDate(
+      startDate
+    )}', @ServiceEndDate = '${formatDate(endOfDay(endDate))}'`;
+
+    const request = new Request(sql, (err) => {
+      if (err) throw err;
+
+      connection.close();
+    });
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows[0]) {
+        results = rows;
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      res.status(200).json(results);
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const getBreakdown = (req, res) => {
+  const { startDate, endDate } = req.params;
+
+  const customerSelection = req.params.customerSelection.split(",");
+
+  let results;
+
+  openDbConnection().then((connection) => {
+    let sql = `SELECT 
+    [Transactions].[CustomerId] AS 'CUSTOMER ID'
+   ,[Transactions].[LocationId] AS 'ACCOUNT'
+   ,[Transactions].ContainerId AS 'ContainerId'
+   ,[Transactions].[Name] AS 'FEE NAME'
+   ,[Transactions].Tonnage AS 'TONNAGE'
+   ,[Transactions].SetDate AS 'SET DATE'
+   ,[Transactions].ServicedDate AS 'SERVICE DATE'
+   ,[Transactions].[Amount] AS 'TOTAL' FROM [TestTRASH].[dbo].[Transactions] WHERE (CustomerId = ${customerSelection[0]}`;
+
+    for (let i = 1; i < customerSelection.length; i++) {
+      sql += `OR CustomerId = ${customerSelection[i]}`;
+    }
+
+    sql += ")";
+
+    sql += `AND [Transactions].[ServicedDate] BETWEEN '${formatDate(
+      startDate
+    )}' AND '${formatDate(endDate)}' ORDER BY CustomerId, ServicedDate;`;
+
+    const request = new Request(sql, (err) => {
+      if (err) throw err;
+
+      connection.close();
+    });
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows[0]) {
+        results = rows;
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      res.status(200).json(results);
+    });
+
+    connection.execSql(request);
+  });
+};
+
 module.exports = {
   getFees,
   createTransaction,
@@ -480,4 +606,7 @@ module.exports = {
   addMonthlyRentCharge,
   addTaxes,
   bill,
+  getCustomerBillBreakdown,
+  importToMunis,
+  getBreakdown,
 };

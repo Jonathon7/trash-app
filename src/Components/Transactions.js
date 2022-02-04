@@ -22,6 +22,7 @@ import money from "money-math";
 import TransactionsModal from "./TransactionsModal";
 import TransactionAppBar from "./TransactionsAppBar";
 import BillModal from "./BillModal";
+import BreakdownModal from "./BreakdownModal";
 
 function createFeesArray(arr) {
   let result = [];
@@ -32,6 +33,8 @@ function createFeesArray(arr) {
     result.push({
       label: arr[i][1].value,
       amount: amountInCents.toString(),
+      chargeCode: arr[i][3].value,
+      rateCode: arr[i][4].value,
       id: arr[i][0].value,
     });
   }
@@ -68,6 +71,7 @@ export default function Transactions() {
   const [feesModalOpen, setFeesModalOpen] = useState(false);
   const [transactionsModalOpen, setTransactionsModalOpen] = useState(false);
   const [billModalOpen, setBillModalOpen] = useState(false);
+  const [breakdownsModalOpen, setBreakdownsModalOpen] = useState(false);
   const [checkedForSessionData, setCheckedForSessionData] = useState(false);
   const [requiredFees] = useState([
     "PULL FEE",
@@ -381,6 +385,14 @@ export default function Transactions() {
       toggleOpen();
     }
 
+    const today = new Date();
+    if (servicedDate > today) {
+      setMessage("Serviced date cannot be in the future");
+      setSeverity("error");
+      toggleOpen();
+      return;
+    }
+
     if (
       !containerID ||
       customerID === "" ||
@@ -452,9 +464,9 @@ export default function Transactions() {
     setOpen(!open);
   }
 
-  function addFeeToDB(name, amount) {
+  function addFeeToDB(name, amount, chargeCode, rateCode) {
     axios
-      .post("/api/fees", { name, amount })
+      .post("/api/fees", { name, amount, chargeCode, rateCode })
       .then((res) => {
         if (typeof res.data === "string") {
           setMessage(res.data);
@@ -471,9 +483,9 @@ export default function Transactions() {
       .catch((err) => console.log(err));
   }
 
-  function updateFee(id, feeAmount) {
+  function updateFee(id, feeAmount, chargeCode, rateCode) {
     axios
-      .put("/api/fees", { id, feeAmount })
+      .put("/api/fees", { id, feeAmount, chargeCode, rateCode })
       .then((res) => {
         setMessage(res.data);
         setSeverity("success");
@@ -530,6 +542,10 @@ export default function Transactions() {
     setBillModalOpen(!billModalOpen);
   }
 
+  function toggleBreakdownsModal() {
+    setBreakdownsModalOpen(!breakdownsModalOpen);
+  }
+
   function clearForm() {
     axios.delete("/api/clear-form");
 
@@ -569,11 +585,17 @@ export default function Transactions() {
 
       <BillModal open={billModalOpen} close={toggleBillModal} />
 
+      <BreakdownModal
+        open={breakdownsModalOpen}
+        close={toggleBreakdownsModal}
+      />
+
       <TransactionAppBar
         createTransaction={createTransaction}
         toggleTransactionsModal={toggleTransactionsModal}
         toggleFeesModal={toggleFeesModal}
         toggleBillModal={toggleBillModal}
+        toggleBreakdownsModal={toggleBreakdownsModal}
         clearForm={clearForm}
         addedFees={addedFees.length}
         total={total}
@@ -650,6 +672,7 @@ export default function Transactions() {
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DesktopDatePicker
                 disabled={!fees.length}
+                disableFuture
                 label="Serviced Date"
                 value={servicedDate}
                 onChange={(date) => setServicedDate(date)}

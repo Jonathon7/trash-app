@@ -5,5 +5,5 @@ module.exports = function (date) {
     endOfDayDate = new Date(date);
   }
 
-  return endOfDayDate.setHours(23, 59, 59);
+  return endOfDayDate.setHours(23, 00, 00);
 };

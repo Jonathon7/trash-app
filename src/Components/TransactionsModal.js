@@ -16,6 +16,8 @@ import TransactionsDialog from "./TransactionsDialog";
 import Notification from "./Notification";
 import DateFilter from "./DateFilter";
 import Switch from "./Switch";
+import { CSVDownload } from "react-csv";
+import money from "money-math";
 
 const style = {
   position: "absolute",
@@ -91,6 +93,131 @@ function createTransactionsArray(arr) {
   return result;
 }
 
+function createBreakdownArray(arr) {
+  // console.log(arr);
+  let finalTotal = money.floatToAmount(0);
+
+  headers = [
+    { label: "DATE", key: "date" },
+    { label: "CUSTOMER", key: "customer" },
+    { label: "LOCATION", key: "location" },
+    { label: "START DATE", key: "startDate" },
+    { label: "END DATE", key: "endDate" },
+    { label: "CUSTOMER INFO", key: "customerInfo" },
+    { label: "", key: "" },
+    { label: "SERVICED DATE", key: "servicedDate" },
+    { label: "CONTAINER ID", key: "containerId" },
+    { label: "TONS", key: "tons" },
+  ];
+
+  const containers = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (
+      typeof arr[i][3].value === "string" &&
+      arr[i][3].value.includes("RETURN TO STOCK")
+    ) {
+      continue;
+    }
+
+    let idx = containers.findIndex((elem) =>
+      elem.hasOwnProperty(arr[i][2].value)
+    );
+
+    if (idx === -1) {
+      containers.push({ [arr[i][2].value]: [] });
+      idx = containers.length - 1;
+    }
+
+    containers[idx][arr[i][2].value].push({
+      customerId: arr[i][0].value,
+      containerId: arr[i][2].value,
+      feeName: arr[i][3].value,
+      tons: arr[i][4].value,
+      chargeAmount: arr[i][7].value,
+      servicedDate: arr[i][6].value,
+    });
+  }
+
+  const rows = [];
+  let row = {};
+  let total = money.floatToAmount(0);
+
+  for (let i = 0; i < containers.length; i++) {
+    const key = Object.keys(containers[i]);
+    for (let j = 0; j < containers[i][key].length; j++) {
+      if (
+        (row.hasOwnProperty("servicedDate") &&
+          row["servicedDate"] !==
+            formatDate(containers[i][key][j].servicedDate)) ||
+        (row.hasOwnProperty("tons") &&
+          row["tons"] !== containers[i][key][j].tons)
+      ) {
+        row.total = total;
+        rows.push(row);
+        row = {};
+        finalTotal = money.add(
+          money.floatToAmount(finalTotal),
+          money.floatToAmount(total)
+        );
+        total = money.floatToAmount(0);
+      }
+
+      row.customerId = containers[i][key][j].customerId;
+      row.servicedDate = formatDate(containers[i][key][j].servicedDate);
+      row[containers[i][key][j].feeName] = containers[i][key][j].chargeAmount;
+
+      const header = headers.some(
+        (elem) => elem.label === containers[i][key][j].feeName
+      );
+
+      if (!header) {
+        headers.push({
+          label: containers[i][key][j].feeName,
+          key: containers[i][key][j].feeName,
+        });
+      }
+
+      if (!isNaN(containers[i][key][j].chargeAmount)) {
+        total = money.add(
+          money.floatToAmount(containers[i][key][j].chargeAmount),
+          money.floatToAmount(total)
+        );
+      }
+
+      if (containers[i][key][j].tons) row.tons = containers[i][key][j].tons;
+      row.containerId = containers[i][key][j].containerId;
+    }
+    row.total = total;
+    rows.push(row);
+    row = {};
+    finalTotal = money.add(
+      money.floatToAmount(finalTotal),
+      money.floatToAmount(total)
+    );
+    total = money.floatToAmount(0);
+  }
+
+  rows.push({ total: finalTotal });
+
+  // some headers are added dynamically so, this ensures that charge amount is always the last field
+  headers.push({ label: "CHARGE AMOUNT", key: "total" });
+
+  return rows;
+}
+
+let headers = [
+  { label: "DATE", key: "date" },
+  { label: "CUSTOMER", key: "customer" },
+  { label: "LOCATION", key: "location" },
+  { label: "START DATE", key: "startDate" },
+  { label: "END DATE", key: "endDate" },
+  { label: "CUSTOMER INFO", key: "customerInfo" },
+  { label: "", key: "" },
+  { label: "SERVICED DATE", key: "servicedDate" },
+  { label: "CONTAINER ID", key: "containerId" },
+  { label: "TONS", key: "tons" },
+];
+
 export default function TransactionsModal(props) {
   const [customers, setCustomers] = useState([]);
   const [customerName, setCustomerName] = useState("");
@@ -113,23 +240,30 @@ export default function TransactionsModal(props) {
   const [showOnlyUnprocessedTransactions, setShowOnlyUnprocessedTransactions] =
     useState(false);
   const [colorCode, setColorCode] = useState(false);
+  const [CSV, setCSV] = useState(false);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     let isSubscribed = true;
-    getCustomers().then((customers) => {
-      return isSubscribed ? setCustomers(customers || []) : null;
-    });
-    getLocations().then((locations) => {
-      return isSubscribed ? setLocations(locations || []) : null;
-    });
-    getContainers().then((containers) => {
-      return isSubscribed ? setContainers(containers || []) : null;
-    });
-    getTopTransactions().then((transactions) => {
-      return isSubscribed ? setTransactions(transactions) : null;
-    });
+
+    if (props.open) {
+      getTopTransactions().then((transactions) => {
+        return isSubscribed ? setTransactions(transactions) : null;
+      });
+    } else {
+      getCustomers().then((customers) => {
+        return isSubscribed ? setCustomers(customers || []) : null;
+      });
+      getLocations().then((locations) => {
+        return isSubscribed ? setLocations(locations || []) : null;
+      });
+      getContainers().then((containers) => {
+        return isSubscribed ? setContainers(containers || []) : null;
+      });
+    }
+
     return () => (isSubscribed = false);
-  }, []);
+  }, [props.open]);
 
   async function getCustomers() {
     return axios
@@ -230,13 +364,11 @@ export default function TransactionsModal(props) {
     const tmp = [...transactions];
 
     for (let i = 0; i < rowsToDelete.length; i++) {
-      const idx = tmp.findIndex(
-        (elem) => elem.transactionID === rowsToDelete[i]
-      );
+      const idx = tmp.findIndex((elem) => elem[0].value === rowsToDelete[i]);
       tmp.splice(idx, 1);
-      setTransactions(tmp);
     }
 
+    setTransactions(tmp);
     setNotificationMessage(`Deleted ${rowsToDelete.length} row(s)`);
     setSeverity("success");
     toggleNotificationOpen();
@@ -260,8 +392,34 @@ export default function TransactionsModal(props) {
     setColorCode(!colorCode);
   }
 
+  function getCustomerBillBreakdown(ID) {
+    axios
+      .get(`/api/bill-breakdown/${startDate}/${endDate}/${ID}`)
+      .then(async (res) => {
+        const breakdown = createBreakdownArray(res.data);
+        setData(breakdown);
+
+        breakdown[0].customer = ID;
+        breakdown[0].location = res.data[0][1].value;
+        breakdown[0].startDate = formatDate(startDate);
+        breakdown[0].endDate = formatDate(endDate);
+        breakdown[0].date = formatDate(new Date());
+
+        const customerInfo = await axios.get(
+          `/api/customer-info/${ID}/${res.data[0][1].value}`
+        );
+
+        breakdown[0].customerInfo = customerInfo.data;
+
+        setCSV(true);
+        setCSV(false);
+      })
+      .catch((err) => console.log(err));
+  }
+
   return (
     <React.Fragment>
+      {CSV ? <CSVDownload data={data} headers={headers} /> : null}
       <Notification
         open={notificationOpen}
         message={notificationMessage}
@@ -280,7 +438,7 @@ export default function TransactionsModal(props) {
         style={{
           overflowY: "scroll",
           overflowX: "hidden",
-          height: "100%",
+          height: "120%",
           background: "#fff",
         }}
       >
@@ -467,6 +625,8 @@ export default function TransactionsModal(props) {
             selectRow={selectRow}
             rowsToDelete={rowsToDelete}
             colorCode={colorCode}
+            download={startDate && endDate ? true : false}
+            getCustomerBillBreakdown={getCustomerBillBreakdown}
           />
         </Box>
       </Modal>

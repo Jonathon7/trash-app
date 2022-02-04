@@ -32,6 +32,13 @@ export default function TransactionsAppBar(props) {
             <Button
               variant="text"
               sx={{ mr: 2 }}
+              onClick={props.toggleBreakdownsModal}
+            >
+              SHOW BREAKDOWNS
+            </Button>
+            <Button
+              variant="text"
+              sx={{ mr: 2 }}
               onClick={props.toggleFeesModal}
             >
               SHOW FEES

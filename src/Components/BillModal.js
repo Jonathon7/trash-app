@@ -5,11 +5,31 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import DateFilter from "./DateFilter";
 import Typography from "@mui/material/Typography";
+import { CSVDownload } from "react-csv";
+
+const createBillDataArray = (arr) => {
+  const result = [];
+  let row = {};
+
+  for (let i = 0; i < arr.length; i++) {
+    row.account = arr[i][0].value;
+    row.billedCustomerId = arr[i][1].value;
+    row.chargeCode = arr[i][2].value;
+    row.rateCode = arr[i][3].value;
+    row.price = arr[i][4].value;
+    result.push(row);
+    row = {};
+  }
+
+  return result;
+};
 
 export default function BillModal(props) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [dateFilterFormError, setDateFilterFormError] = useState(false);
+  const [data, setData] = useState([]); // used to create CSV file
+  const [download, setDownload] = useState(false);
 
   async function bill() {
     if (!startDate || !endDate) {
@@ -89,7 +109,26 @@ export default function BillModal(props) {
       TIO: feesData[13].TIO,
       EC: feesData[14].EC,
     });
+
+    axios
+      .get(`/api/import-to-munis/${startDate}/${endDate}`)
+      .then((res) => {
+        setData(createBillDataArray(res.data));
+        setDownload(true);
+        setDownload(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
+
+  const headers = [
+    { label: "ACCOUNT", key: "account" },
+    { label: "BILLED CUSTOMER ID", key: "billedCustomerId" },
+    { label: "CHARGE CODE", key: "chargeCode" },
+    { label: "RATE CODE", key: "rateCode" },
+    { label: "PRICE", key: "price" },
+  ];
 
   return (
     <Modal open={props.open} onClose={props.close}>
@@ -129,6 +168,7 @@ export default function BillModal(props) {
           <Button variant="outlined" onClick={bill} sx={{ alignSelf: "start" }}>
             BILL
           </Button>
+          {download && <CSVDownload data={data} headers={headers} />}
         </Box>
       </Box>
     </Modal>

@@ -182,9 +182,74 @@ const checkForExistingCustomer = (id) =>
     });
   });
 
+const getCustomerBill = (req, res) => {
+  openDbConnection().then((connection) => {
+    let customerExists = false;
+    const request = new Request(
+      `SELECT * FROM ${process.env.customerTable} WHERE CustomerId = ${id}`,
+      (err) => {
+        if (err) {
+          throw err;
+        }
+        connection.close();
+      }
+    );
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows[0]) {
+        customerExists = true;
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      if (customerExists) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+
+    connection.execSql(request);
+  });
+};
+
+const getCustomerInfo = async (req, res) => {
+  openDbConnection().then((connection) => {
+    let result = "";
+
+    const sql = `SELECT Name FROM ${process.env.customerTable} WHERE CustomerId = ${req.params.customerID}; SELECT Address1 FROM ${process.env.locationTable} WHERE LocationId = ${req.params.locationID};`;
+
+    const request = new Request(sql, (err) => {
+      if (err) {
+        throw err;
+      }
+      connection.close();
+    });
+
+    request.on("doneInProc", (rowCount, more, rows) => {
+      if (rows) {
+        if (!result) {
+          result += rows[0][0].value;
+          result += "\n";
+        } else {
+          result += rows[0][0].value;
+        }
+      }
+    });
+
+    request.on("requestCompleted", function () {
+      res.status(200).json(result);
+    });
+
+    connection.execSql(request);
+  });
+};
+
 module.exports = {
   getCustomers,
   getCustomer,
+  getCustomerBill,
   addCustomer,
   updateCustomer,
+  getCustomerInfo,
 };

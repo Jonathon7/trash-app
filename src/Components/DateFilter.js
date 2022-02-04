@@ -14,6 +14,7 @@ export default function DateFilter(props) {
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DesktopDatePicker
               clearable
+              orientation="portrait"
               disabled={props.editingEnabled}
               label="Start Date"
               value={props.startDate}
