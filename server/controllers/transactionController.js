@@ -542,9 +542,11 @@ const importToMunis = (req, res) => {
 };
 
 const getBreakdown = (req, res) => {
-  const { startDate, endDate } = req.params;
+  const { startDate, endDate, customerSelection } = req.params;
 
-  const customerSelection = req.params.customerSelection.split(",");
+  const customers = customerSelection.includes(",")
+    ? customerSelection.split(",")
+    : customerSelection;
 
   let results;
 
@@ -557,17 +559,27 @@ const getBreakdown = (req, res) => {
    ,[Transactions].Tonnage AS 'TONNAGE'
    ,[Transactions].SetDate AS 'SET DATE'
    ,[Transactions].ServicedDate AS 'SERVICE DATE'
-   ,[Transactions].[Amount] AS 'TOTAL' FROM [TestTRASH].[dbo].[Transactions] WHERE (CustomerId = ${customerSelection[0]}`;
+   ,[Transactions].[Amount] AS 'TOTAL' FROM ${process.env.transactionsTable}`;
 
-    for (let i = 1; i < customerSelection.length; i++) {
-      sql += `OR CustomerId = ${customerSelection[i]}`;
+    if (typeof customers === "object") {
+      sql += `WHERE (CustomerId = ${customers[0]}`;
+
+      for (let i = 1; i < customers.length; i++) {
+        sql += `OR CustomerId = ${customers[i]}`;
+      }
+
+      sql += ")";
+
+      sql += `AND [Transactions].[ServicedDate] BETWEEN '${formatDate(
+        startDate
+      )}' AND '${formatDate(endDate)}' ORDER BY CustomerId, ServicedDate;`;
+    } else {
+      sql += `WHERE [Transactions].[ServicedDate] BETWEEN '${formatDate(
+        startDate
+      )}' AND '${formatDate(endDate)}' ORDER BY CustomerId, ServicedDate;`;
     }
 
-    sql += ")";
-
-    sql += `AND [Transactions].[ServicedDate] BETWEEN '${formatDate(
-      startDate
-    )}' AND '${formatDate(endDate)}' ORDER BY CustomerId, ServicedDate;`;
+    console.log(sql);
 
     const request = new Request(sql, (err) => {
       if (err) throw err;

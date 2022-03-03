@@ -178,8 +178,11 @@ export default function BreakdownModal(props) {
     }
 
     axios
-      .post(`/api/breakdown-view/${startDate}/${endDate}/${ids}`)
+      .post(
+        `/api/breakdown-view/${startDate}/${endDate}/${selectAll ? "ALL" : ids}`
+      )
       .then((res) => {
+        console.log(res.data);
         customersArray.push([res.data[0]]);
         for (let i = 1; i < res.data.length; i++) {
           if (res.data[i][0].value !== res.data[i - 1][0].value) {
@@ -196,6 +199,7 @@ export default function BreakdownModal(props) {
         }
 
         breakdownHeaders.push({ label: "CHARGE AMOUNT", key: "total" });
+
         setBreakdowns(customerBreakdowns);
       })
       .catch((err) => {
@@ -246,6 +250,11 @@ export default function BreakdownModal(props) {
             <FormControl margin="normal" sx={{ width: 800 }}>
               <Grid container direction="row">
                 <Autocomplete
+                  disabled={selectAll}
+                  getOptionDisabled={(option) =>
+                    customerSelection.length >= 15 &&
+                    !customerSelection.some((elem) => elem.id === option.id)
+                  }
                   multiple
                   fullWidth
                   disableCloseOnSelect
